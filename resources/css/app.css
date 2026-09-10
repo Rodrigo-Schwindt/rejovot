@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-montserrat: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+
+    /* Paleta institucional Rejovot */
+    --color-rj-navy: #0d2b5e;
+    --color-rj-navy-deep: #0a2249;
+    --color-rj-navy-soft: #123a7a;
+    --color-rj-red: #e11a22;
+    --color-rj-red-dark: #b8141b;
+}
+
+@layer base {
+    html,
+    body,
+    button,
+    input,
+    select,
+    textarea {
+        font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
