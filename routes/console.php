@@ -19,3 +19,6 @@ Schedule::command('odoo:sync-clientes')->hourly()->withoutOverlapping();
 
 // Las marcas se deducen del nombre, así que se recalculan después del sync.
 Schedule::command('catalogo:marcas')->dailyAt('04:30')->withoutOverlapping();
+
+// La lista de precios se rearma con el catálogo ya sincronizado.
+Schedule::command('precios:generar')->dailyAt('05:00')->withoutOverlapping();

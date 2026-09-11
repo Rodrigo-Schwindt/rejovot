@@ -15,9 +15,12 @@ class PedidosDemo implements PedidosRepository
     {
     }
 
-    public function pedidos(): array
+    public function pedidos(int $limite = 25): array
     {
-        return array_map(fn (array $pedido) => $this->conLineas($pedido), $this->dataset());
+        return array_map(
+            fn (array $pedido) => $this->conLineas($pedido),
+            array_slice($this->dataset(), 0, $limite),
+        );
     }
 
     public function pedido(string $numero): ?array

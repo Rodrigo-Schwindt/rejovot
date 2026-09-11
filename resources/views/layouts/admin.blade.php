@@ -181,7 +181,7 @@
 
             <a href="{{ route('admin.pagos.comprobantes.index') }}" class="nav-item {{ request()->routeIs('admin.pagos.comprobantes.*') ? 'active-link' : '' }}">
                 <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
-                Comprobantes de pago
+                Cuenta corriente
             </a>
 
             <div class="sidebar-divider my-2 h-px"></div>

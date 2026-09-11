@@ -20,6 +20,12 @@ class CuentaDemo implements CuentaRepository
         ];
     }
 
+    /** El demo no simula objetivos: los trae Odoo. */
+    public function objetivos(): ?array
+    {
+        return null;
+    }
+
     public function movimientos(): array
     {
         return [

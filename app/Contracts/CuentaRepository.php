@@ -3,8 +3,8 @@
 namespace App\Contracts;
 
 /**
- * Cuenta corriente del cliente. Hoy la resuelve una implementación demo y
- * mañana la de Odoo (account.move / account.move.line).
+ * Cuenta corriente del cliente. La resuelve `CuentaOdoo` leyendo los apuntes
+ * por cobrar; `CuentaDemo` queda para trabajar sin conexión al ERP.
  */
 interface CuentaRepository
 {
@@ -13,4 +13,7 @@ interface CuentaRepository
 
     /** Movimientos de la cuenta, del más nuevo al más viejo. */
     public function movimientos(): array;
+
+    /** Objetivo de compra del mes, o null si el cliente no tiene escala. */
+    public function objetivos(): ?array;
 }

@@ -19,6 +19,11 @@
         @csrf
         <span class="sec-label">Publicar una lista</span>
 
+        <p class="mt-2 text-sm text-slate-500">
+            La «Lista de precios completa» se arma sola todos los días a las 5 con los productos
+            publicados en el sitio: no hace falta subirla. Acá se cargan las listas que preparás aparte.
+        </p>
+
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div class="md:col-span-2">
                 <label class="f-label" for="descripcion">Descripción</label>
@@ -65,6 +70,11 @@
                     <tr class="transition hover:bg-slate-50/60">
                         <td class="px-4 py-3 font-medium text-slate-800">
                             {{ $lista->descripcion }}
+                            @if($lista->es_automatica)
+                                <span class="ml-1 inline-flex items-center rounded bg-blue-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-[#0D2B5E]">
+                                    Automática
+                                </span>
+                            @endif
                             <span class="block text-xs text-slate-400">{{ $lista->archivo_original }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">{{ $lista->formato_nombre }}</td>
@@ -87,6 +97,15 @@
                                         {{ $lista->publicada ? 'Ocultar' : 'Publicar' }}
                                     </button>
                                 </form>
+
+                                @if($lista->es_automatica)
+                                    <form method="POST" action="{{ route('admin.precios.regenerar') }}">
+                                        @csrf
+                                        <button type="submit" class="cursor-pointer rounded bg-blue-50 px-2 py-1 text-xs font-medium text-[#0D2B5E] transition hover:bg-blue-100">
+                                            Actualizar ahora
+                                        </button>
+                                    </form>
+                                @endif
 
                                 <form method="POST" action="{{ route('admin.precios.destroy', $lista) }}" onsubmit="return confirm('¿Eliminar esta lista?')">
                                     @csrf @method('DELETE')

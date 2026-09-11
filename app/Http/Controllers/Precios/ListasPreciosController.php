@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Precios;
 use App\Http\Controllers\Controller;
 use App\Models\PriceList;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -24,13 +25,22 @@ class ListasPreciosController extends Controller
         );
     }
 
-    /** Abre el PDF en el navegador. */
+    /**
+     * Abre la lista en el navegador. Si es un PDF subido se muestra ese; si es
+     * la lista generada, su versión PDF (lo que se descarga sigue siendo el CSV).
+     */
     public function show(PriceList $lista)
     {
-        abort_unless($lista->publicada && $lista->es_pdf, 404);
-        abort_unless(Storage::disk('public')->exists($lista->archivo), 404);
+        abort_unless($lista->publicada, 404);
 
-        return response()->file(Storage::disk('public')->path($lista->archivo));
+        $archivo = $lista->archivo_para_ver;
+
+        abort_unless($archivo && Storage::disk('public')->exists($archivo), 404);
+
+        return response()->file(Storage::disk('public')->path($archivo), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $lista->descripcion . '.pdf"',
+        ]);
     }
 
     /* ---------------- Admin ---------------- */
@@ -83,6 +93,21 @@ class ListasPreciosController extends Controller
         return back()->with('success', $lista->publicada
             ? 'La lista se muestra en el sitio.'
             : 'La lista quedó oculta en el sitio.');
+    }
+
+    /** Rehace la lista automática con el catálogo de este momento. */
+    public function regenerar()
+    {
+        // Son decenas de miles de filas: no entra en el tope de 30 segundos.
+        set_time_limit(300);
+
+        Artisan::call('precios:generar');
+
+        $lista = PriceList::automatica()->first();
+
+        return back()->with('success', $lista
+            ? "Lista actualizada: {$lista->notas}"
+            : 'No hay productos publicados para armar la lista.');
     }
 
     public function destroy(PriceList $lista)

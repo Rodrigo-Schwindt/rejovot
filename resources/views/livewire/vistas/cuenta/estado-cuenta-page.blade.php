@@ -1,5 +1,5 @@
 <div>
-    {{-- Cuenta corriente (CuentaDemo hasta conectar Odoo). --}}
+    {{-- Cuenta corriente del cliente activo, leída de Odoo. --}}
 
     <div class="mx-auto w-full max-w-[1300px] px-4 py-6 xl:px-6">
 
@@ -8,6 +8,16 @@
             <span class="mx-1.5 text-slate-400">&gt;</span>
             <span>Estado de la cuenta</span>
         </nav>
+
+        @if($cliente)
+            <p class="mb-4 text-[14px] text-slate-500">
+                Cuenta de <span class="font-semibold text-slate-700">{{ $cliente->name }}</span>
+            </p>
+        @endif
+
+        @if($objetivos)
+            @include('livewire.vistas.cuenta.partials.barra-objetivos')
+        @endif
 
         @include('livewire.vistas.cuenta.partials.tarjetas-saldo')
 
@@ -32,7 +42,7 @@
                     @empty
                         <tr>
                             <td colspan="9" class="px-4 py-14 text-center text-[14px] text-slate-500">
-                                No hay movimientos en tu cuenta.
+                                {{ $motivo ?: 'No tenés comprobantes pendientes.' }}
                             </td>
                         </tr>
                     @endforelse

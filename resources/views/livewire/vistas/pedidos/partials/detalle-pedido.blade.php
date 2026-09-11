@@ -31,8 +31,20 @@
         </tbody>
         <tfoot>
             <tr class="border-t border-slate-200">
-                <td colspan="3" class="px-4 py-3 text-right text-[14px] font-semibold text-slate-700">Importe del pedido</td>
-                <td class="px-4 py-3 text-right text-[16px] font-bold text-slate-900 whitespace-nowrap">{{ Precio::ar($pedido['importe']) }}</td>
+                <td colspan="3" class="px-4 py-2.5 text-right text-[14px] text-slate-600">Subtotal</td>
+                <td class="px-4 py-2.5 text-right text-[14px] text-slate-700 whitespace-nowrap">{{ Precio::ar($pedido['importe']) }}</td>
+            </tr>
+            @isset($pedido['iva'])
+                <tr>
+                    <td colspan="3" class="px-4 py-2.5 text-right text-[14px] text-slate-600">IVA</td>
+                    <td class="px-4 py-2.5 text-right text-[14px] text-slate-700 whitespace-nowrap">{{ Precio::ar($pedido['iva']) }}</td>
+                </tr>
+            @endisset
+            <tr class="border-t border-slate-100">
+                <td colspan="3" class="px-4 py-3 text-right text-[14px] font-semibold text-slate-700">Total del pedido</td>
+                <td class="px-4 py-3 text-right text-[16px] font-bold text-slate-900 whitespace-nowrap">
+                    {{ Precio::ar($pedido['total'] ?? $pedido['importe']) }}
+                </td>
             </tr>
         </tfoot>
     </table>

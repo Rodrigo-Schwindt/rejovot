@@ -34,7 +34,7 @@ class OdooEnvios
 
             return array_map(fn (array $row) => [
                 'id' => (int) $row['id'],
-                'nombre' => $this->limpiarNombre($row['name']),
+                'nombre' => self::limpiarNombre($row['name']),
                 'precio' => (float) ($row['fixed_price'] ?? 0),
                 'gratis_desde' => ! empty($row['free_over']) ? (float) $row['amount'] : null,
                 'producto_id' => $row['product_id'][0] ?? null,
@@ -79,7 +79,8 @@ class OdooEnvios
     }
 
     /** Los nombres vienen con relleno: "Retiro por REJOVOT .. --- MOSTRADOR ---..". */
-    protected function limpiarNombre(string $nombre): string
+    /** Los nombres de Odoo vienen con asteriscos y guiones de relleno. */
+    public static function limpiarNombre(string $nombre): string
     {
         $limpio = preg_replace('/[*._\-]{2,}/u', ' ', $nombre);
         $limpio = preg_replace('/\s+/u', ' ', (string) $limpio);

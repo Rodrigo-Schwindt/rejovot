@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cuenta\ComprobantesController as CuentaComprobantesController;
 use App\Http\Controllers\Auth\IngresoController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Catalogo\ProductosAdminController;
@@ -35,6 +36,8 @@ Route::get('/busqueda-por-vehiculo', BusquedaVehiculoPage::class)->name('vehicul
 Route::get('/carrito', CarritoPage::class)->name('carrito');
 Route::get('/mis-pedidos', MisPedidosPage::class)->name('pedidos');
 Route::get('/estado-de-cuenta', EstadoCuentaPage::class)->name('cuenta');
+Route::get('/estado-de-cuenta/comprobante/{move}', [CuentaComprobantesController::class, 'show'])
+    ->whereNumber('move')->name('cuenta.comprobante');
 Route::get('/info-de-pagos', InfoPagosPage::class)->name('pagos');
 Route::get('/margenes', MargenesPage::class)->name('margenes');
 Route::get('/lista-de-precios', ListaPreciosPage::class)->name('precios');
@@ -96,6 +99,7 @@ Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function
 
     Route::get('/listas-de-precios', [ListasPreciosController::class, 'index'])->name('admin.precios.index');
     Route::post('/listas-de-precios', [ListasPreciosController::class, 'store'])->name('admin.precios.store');
+    Route::post('/listas-de-precios/regenerar', [ListasPreciosController::class, 'regenerar'])->name('admin.precios.regenerar');
     Route::patch('/listas-de-precios/{lista}/estado', [ListasPreciosController::class, 'toggle'])->name('admin.precios.toggle');
     Route::delete('/listas-de-precios/{lista}', [ListasPreciosController::class, 'destroy'])->name('admin.precios.destroy');
 

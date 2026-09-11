@@ -26,22 +26,33 @@ class BusquedaVehiculoPage extends Component
     /** Filtra la lista de marcas: son cien y así no hay que recorrerlas a ojo. */
     public string $buscarMarca = '';
 
+    /** Busca dentro de la marca elegida: código, descripción y código OEM. */
+    #[Url(except: '')]
+    public string $q = '';
+
     public int $porPagina = 50;
 
     public function elegirMarca(string $marca): void
     {
         $this->marca = $marca;
         $this->buscarMarca = '';
+        $this->q = '';
         $this->resetPage();
     }
 
     public function volver(): void
     {
         $this->marca = '';
+        $this->q = '';
         $this->resetPage();
     }
 
     public function updatedBuscarMarca(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedQ(): void
     {
         $this->resetPage();
     }
@@ -66,7 +77,10 @@ class BusquedaVehiculoPage extends Component
         return view('livewire.vistas.vehiculos.busqueda-vehiculo-page', [
             'marcas' => $marcas,
             'productos' => $this->marca !== ''
-                ? $catalogo->paginados(['marca' => $this->marca], $this->porPagina)
+                ? $catalogo->paginados([
+                    'marca' => $this->marca,
+                    'q' => trim($this->q),
+                ], $this->porPagina)
                 : null,
         ]);
     }

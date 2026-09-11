@@ -3,27 +3,29 @@
 namespace App\Livewire\Vistas\Cuenta;
 
 use App\Contracts\CuentaRepository;
+use App\Services\Sesion\ClienteActivo;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+/**
+ * Cuenta corriente del cliente activo, leída de Odoo.
+ * Sin cliente elegido no hay saldos que mostrar.
+ */
 #[Layout('layouts.public')]
 class EstadoCuentaPage extends Component
 {
-    /** El comprobante lo va a servir Odoo; por ahora sólo avisamos. */
-    public function descargar(string $numero): void
+    public function render(CuentaRepository $cuenta, ClienteActivo $clienteActivo)
     {
-        $this->dispatch(
-            'show-toast',
-            message: "El comprobante {$numero} se va a descargar desde Odoo.",
-            type: 'info',
-        );
-    }
+        $cliente = $clienteActivo->actual();
 
-    public function render(CuentaRepository $cuenta)
-    {
         return view('livewire.vistas.cuenta.estado-cuenta-page', [
+            'cliente' => $cliente,
             'saldos' => $cuenta->saldos(),
             'movimientos' => $cuenta->movimientos(),
+            'objetivos' => $cliente ? $cuenta->objetivos() : null,
+            'motivo' => $cliente ? null : ($clienteActivo->puedeElegir()
+                ? 'Elegí un cliente en Productos para ver su cuenta.'
+                : 'Ingresá con tu usuario para ver el estado de tu cuenta.'),
         ]);
     }
 }

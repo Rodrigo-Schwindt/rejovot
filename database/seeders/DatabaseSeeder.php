@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
             ContactSeeder::class,
             MetadataSeeder::class,
             BankAccountSeeder::class,
-            PriceListSeeder::class,
         ]);
     }
 }

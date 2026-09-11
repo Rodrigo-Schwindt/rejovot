@@ -4,10 +4,19 @@
 <div class="animate-fadeIn space-y-6">
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-xl font-semibold text-slate-800">
-            Comprobantes de pago
-            <span class="text-base font-normal text-slate-400">({{ $comprobantes->total() }})</span>
-        </h2>
+        <div>
+            <h2 class="text-xl font-semibold text-slate-800">
+                Cuenta corriente
+                <span class="text-base font-normal text-slate-400">({{ $comprobantes->total() }})</span>
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Comprobantes de pago que cargan los clientes desde Info de pagos.
+                @if($totalPendientes > 0)
+                    Hay <strong class="text-[#E11A22]">{{ \App\Support\Precio::ar($importePendiente) }}</strong>
+                    sin procesar.
+                @endif
+            </p>
+        </div>
         <div class="flex gap-2 text-xs">
             <a href="{{ route('admin.pagos.comprobantes.index') }}"
                class="inline-flex items-center rounded px-2 py-1 font-medium {{ $estado === '' ? 'bg-[#0D2B5E] text-white' : 'bg-slate-100 text-slate-600' }}">Todos</a>
@@ -18,6 +27,19 @@
         </div>
     </div>
 
+    <form method="GET" action="{{ route('admin.pagos.comprobantes.index') }}" class="flex flex-wrap items-end gap-3">
+        @if($estado !== '')<input type="hidden" name="estado" value="{{ $estado }}">@endif
+        <div class="min-w-[260px] flex-1">
+            <label class="f-label" for="q">Buscar</label>
+            <input type="text" id="q" name="q" value="{{ $buscar }}" class="f-input"
+                   placeholder="Cliente, banco o número de factura">
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        @if($buscar !== '')
+            <a href="{{ route('admin.pagos.comprobantes.index', ['estado' => $estado ?: null]) }}" class="btn btn-ghost">Limpiar</a>
+        @endif
+    </form>
+
     @if(session('success'))<div class="alert-success">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="alert-error">{{ session('error') }}</div>@endif
 
@@ -25,6 +47,7 @@
         <table class="w-full min-w-[900px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
+                    <th class="px-4 py-3 text-left">Cliente</th>
                     <th class="px-4 py-3 text-left">Enviado</th>
                     <th class="px-4 py-3 text-left">Fecha de pago</th>
                     <th class="px-4 py-3 text-right">Importe</th>
@@ -37,6 +60,16 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($comprobantes as $comprobante)
                     <tr class="transition hover:bg-slate-50/60">
+                        <td class="px-4 py-3">
+                            @if($comprobante->customer)
+                                <span class="font-medium text-slate-800">{{ $comprobante->customer->name }}</span>
+                                @if($comprobante->user?->esVendedor())
+                                    <span class="block text-xs text-slate-400">Lo envió {{ $comprobante->user->name }}</span>
+                                @endif
+                            @else
+                                <span class="text-xs text-slate-400">Sin identificar</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-xs text-slate-400">{{ $comprobante->created_at?->format('d/m/Y H:i') }}</td>
                         <td class="px-4 py-3">{{ $comprobante->fecha?->format('d/m/Y') }}</td>
                         <td class="px-4 py-3 text-right font-medium text-slate-800">{{ \App\Support\Precio::ar($comprobante->importe) }}</td>
@@ -75,13 +108,13 @@
 
                     @if($comprobante->observaciones)
                         <tr class="bg-slate-50/40">
-                            <td colspan="7" class="px-4 pb-3 text-xs text-slate-500">
+                            <td colspan="8" class="px-4 pb-3 text-xs text-slate-500">
                                 <b>Observaciones:</b> {{ $comprobante->observaciones }}
                             </td>
                         </tr>
                     @endif
                 @empty
-                    <tr><td colspan="7" class="px-6 py-10 text-center text-sm text-slate-500">Todavía no recibiste comprobantes</td></tr>
+                    <tr><td colspan="8" class="px-6 py-10 text-center text-sm text-slate-500">Todavía no recibiste comprobantes</td></tr>
                 @endforelse
             </tbody>
         </table>

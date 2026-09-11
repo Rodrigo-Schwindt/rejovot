@@ -2,8 +2,13 @@
 
 namespace App\Livewire\Vistas\Pagos;
 
+use App\Mail\ComprobantePagoMail;
 use App\Models\BankAccount;
+use App\Models\Contact;
 use App\Models\PaymentReceipt;
+use App\Services\Sesion\ClienteActivo;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -49,11 +54,16 @@ class InfoPagosPage extends Component
         ];
     }
 
-    public function enviar(): void
+    public function enviar(ClienteActivo $clienteActivo): void
     {
         $datos = $this->validate();
 
-        PaymentReceipt::create([
+        $cliente = $clienteActivo->actual();
+
+        $comprobante = PaymentReceipt::create([
+            // Queda atado al cliente activo para poder imputarlo.
+            'customer_id' => $cliente?->id,
+            'user_id' => auth('sitio')->id(),
             'fecha' => $datos['fecha'],
             'importe' => $datos['importe'],
             'banco' => $datos['banco'],
@@ -69,9 +79,30 @@ class InfoPagosPage extends Component
             'estado' => 'pendiente',
         ]);
 
+        $this->avisarPorMail($comprobante);
+
         $this->reset(['fecha', 'importe', 'banco', 'sucursal', 'facturas', 'observaciones', 'archivo']);
 
         $this->dispatch('show-toast', message: 'Recibimos tu comprobante. ¡Gracias!', type: 'success');
+    }
+
+    /**
+     * Avisa al mail de contacto que cargaron un comprobante. Si el mail falla,
+     * el comprobante ya quedó guardado: no se pierde nada.
+     */
+    protected function avisarPorMail(PaymentReceipt $comprobante): void
+    {
+        $destino = Contact::first()?->mail_adm;
+
+        if (! $destino) {
+            return;
+        }
+
+        try {
+            Mail::to($destino)->send(new ComprobantePagoMail($comprobante->fresh('customer', 'user')));
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo avisar del comprobante ' . $comprobante->id . ': ' . $e->getMessage());
+        }
     }
 
     public function render()

@@ -10,17 +10,34 @@
         </div>
     </td>
 
-    <td class="px-4 py-4 text-[15px] text-slate-700">{{ $lista->descripcion }}</td>
+    <td class="px-4 py-4 text-[15px] text-slate-700">
+        {{ $lista->descripcion }}
+        @if($lista->vigencia)
+            <span class="block text-[13px] text-slate-500">{{ $lista->vigencia }}</span>
+        @endif
+        @if($lista->notas)
+            <span class="block text-[13px] text-slate-400">{{ $lista->notas }}</span>
+        @endif
+    </td>
 
     <td class="px-4 py-4 text-[15px] text-slate-700">{{ $lista->formato_nombre }}</td>
 
     <td class="px-4 py-4">
         <div class="flex flex-wrap items-center justify-end gap-3">
-            <button type="button" wire:click="verDetalle({{ $lista->id }})"
-                    class="h-[44px] cursor-pointer rounded-[4px] bg-[#0D2B5E] px-6 text-[14px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]"
-                    aria-expanded="{{ $abiertaAca ? 'true' : 'false' }}">
-                {{ $abiertaAca ? 'Ocultar detalle' : 'Ver detalle' }}
-            </button>
+            {{-- Si hay PDF se abre directo; si no, se despliega la ficha. --}}
+            @if($lista->puede_verse)
+                <a href="{{ route('precios.ver', $lista) }}" target="_blank" rel="noopener"
+                   class="inline-flex h-[44px] items-center gap-2 rounded-[4px] bg-[#0D2B5E] px-6 text-[14px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]">
+                    Ver detalle
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+            @else
+                <button type="button" wire:click="verDetalle({{ $lista->id }})"
+                        class="h-[44px] cursor-pointer rounded-[4px] bg-[#0D2B5E] px-6 text-[14px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]"
+                        aria-expanded="{{ $abiertaAca ? 'true' : 'false' }}">
+                    {{ $abiertaAca ? 'Ocultar detalle' : 'Ver detalle' }}
+                </button>
+            @endif
 
             <a href="{{ route('precios.descargar', $lista) }}"
                class="inline-flex h-[44px] items-center rounded-[4px] border border-[#0D2B5E] px-6 text-[14px] font-bold uppercase tracking-wide text-[#0D2B5E] transition hover:bg-[#0D2B5E] hover:text-white">
@@ -59,13 +76,6 @@
                     <p class="mt-3 text-[14px] text-slate-600">{{ $lista->notas }}</p>
                 @endif
 
-                @if($lista->es_pdf)
-                    <a href="{{ route('precios.ver', $lista) }}" target="_blank" rel="noopener"
-                       class="mt-4 inline-flex items-center gap-2 text-[14px] font-semibold text-[#0D2B5E] underline">
-                        Abrir en el navegador
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                    </a>
-                @endif
             </div>
         </td>
     </tr>

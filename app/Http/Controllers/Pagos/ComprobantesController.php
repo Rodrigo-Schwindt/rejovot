@@ -7,14 +7,25 @@ use App\Models\PaymentReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Cuenta corriente: los comprobantes de pago que cargan los clientes desde
+ * Info de pagos. No vienen de Odoo; el pago se imputa allá a mano.
+ */
 class ComprobantesController extends Controller
 {
     public function index(Request $request)
     {
-        $estado = $request->get('estado', '');
+        $estado = (string) $request->get('estado', '');
+        $buscar = trim((string) $request->get('q'));
 
         $comprobantes = PaymentReceipt::query()
+            ->with(['customer', 'user'])
             ->when(in_array($estado, ['pendiente', 'procesado'], true), fn ($q) => $q->where('estado', $estado))
+            ->when($buscar !== '', fn ($q) => $q->where(function ($sub) use ($buscar) {
+                $sub->where('banco', 'like', "%{$buscar}%")
+                    ->orWhere('facturas_canceladas', 'like', "%{$buscar}%")
+                    ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$buscar}%"));
+            }))
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
@@ -22,8 +33,10 @@ class ComprobantesController extends Controller
         return view('livewire.pagos.comprobantes', [
             'comprobantes' => $comprobantes,
             'estado' => $estado,
+            'buscar' => $buscar,
             'totalPendientes' => PaymentReceipt::where('estado', 'pendiente')->count(),
             'totalProcesados' => PaymentReceipt::where('estado', 'procesado')->count(),
+            'importePendiente' => (float) PaymentReceipt::where('estado', 'pendiente')->sum('importe'),
         ]);
     }
 

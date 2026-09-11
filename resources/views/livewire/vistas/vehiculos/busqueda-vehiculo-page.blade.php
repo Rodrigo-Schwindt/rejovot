@@ -50,6 +50,13 @@
                 </div>
 
             @else
+                <div class="mb-4">
+                    <label class="sr-only" for="buscar-producto">Buscar dentro de {{ $marca }}</label>
+                    <input id="buscar-producto" type="text" wire:model.live.debounce.500ms="q"
+                           placeholder="Buscar dentro de {{ $marca }}: código, descripción o código OEM"
+                           class="h-[46px] w-full rounded-[4px] border border-slate-300 px-4 text-[15px] text-slate-700 outline-none placeholder:text-slate-400 focus:border-[#0D2B5E]">
+                </div>
+
                 <p class="mb-4 text-[14px] text-slate-500">
                     {{ number_format($productos->total(), 0, ',', '.') }}
                     {{ $productos->total() === 1 ? 'producto' : 'productos' }} de {{ $marca }}
@@ -66,7 +73,11 @@
                         </div>
                     @empty
                         <p class="px-2 py-10 text-center text-[15px] text-slate-500">
-                            Todavía no hay productos publicados de {{ $marca }}.
+                            @if(trim($q) !== '')
+                                Ningún producto de {{ $marca }} coincide con «{{ $q }}».
+                            @else
+                                Todavía no hay productos publicados de {{ $marca }}.
+                            @endif
                         </p>
                     @endforelse
                 </div>
