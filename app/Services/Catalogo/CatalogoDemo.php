@@ -50,6 +50,12 @@ class CatalogoDemo implements CatalogoRepository
         ];
     }
 
+    /** El demo no tiene relacionados: los carga Odoo. */
+    public function relacionados(string $codigo): array
+    {
+        return [];
+    }
+
     public function filtros(): array
     {
         return [

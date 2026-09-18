@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /** Espejo local de product.product de Odoo. */
 class Product extends Model
@@ -16,6 +17,7 @@ class Product extends Model
         'name',
         'oem_codes',
         'type',
+        'extra_image_ids',
         'category_id',
         'brand_id',
         'list_price',
@@ -40,6 +42,7 @@ class Product extends Model
             'oculto' => 'boolean',
             'destacado' => 'boolean',
             'discount_percent' => 'decimal:2',
+            'extra_image_ids' => 'array',
             'discount_from' => 'datetime',
             'discount_to' => 'datetime',
             'odoo_write_date' => 'datetime',
@@ -49,6 +52,23 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /** Alternativos y accesorios que carga Odoo en la pestaña Ventas. */
+    public function relacionados(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'product_related', 'product_id', 'related_id')
+            ->withPivot('tipo');
+    }
+
+    public function alternativos(): BelongsToMany
+    {
+        return $this->relacionados()->wherePivot('tipo', 'alternativo');
+    }
+
+    public function accesorios(): BelongsToMany
+    {
+        return $this->relacionados()->wherePivot('tipo', 'accesorio');
     }
 
     public function brand(): BelongsTo
@@ -122,5 +142,23 @@ class Product extends Model
     public function getImagenUrlAttribute(): string
     {
         return rtrim((string) config('odoo.url'), '/') . "/web/image/product.template/{$this->odoo_tmpl_id}/image_512";
+    }
+
+    /**
+     * Todas las imágenes: la principal primero y después las adicionales.
+     * Sólo el 1,4% del catálogo tiene más de una.
+     *
+     * @return array<int, string>
+     */
+    public function getImagenesAttribute(): array
+    {
+        $base = rtrim((string) config('odoo.url'), '/');
+
+        $extras = array_map(
+            fn ($id) => "{$base}/web/image/product.image/{$id}/image_512",
+            $this->extra_image_ids ?? [],
+        );
+
+        return [$this->imagen_url, ...$extras];
     }
 }

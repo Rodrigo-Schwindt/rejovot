@@ -6,7 +6,7 @@
         @endforeach
     </div>
 @else
-    <div class="rounded-[4px] border border-slate-200 bg-white px-4 py-14 text-center text-[14px] text-slate-500">
+    <div class="anim-aparecer rounded-[4px] border border-slate-200 bg-white px-4 py-14 text-center text-[14px] text-slate-500">
         No encontramos productos con esos filtros.
     </div>
 @endif

@@ -17,6 +17,9 @@ Schedule::command('odoo:sync-ofertas')->hourly()->withoutOverlapping();
 // Clientes y vendedores: cambian menos que el catálogo.
 Schedule::command('odoo:sync-clientes')->hourly()->withoutOverlapping();
 
+// Alternativos y accesorios: necesitan el catálogo ya sincronizado.
+Schedule::command('odoo:sync-relacionados')->dailyAt('04:15')->withoutOverlapping();
+
 // Las marcas se deducen del nombre, así que se recalculan después del sync.
 Schedule::command('catalogo:marcas')->dailyAt('04:30')->withoutOverlapping();
 

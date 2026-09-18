@@ -67,6 +67,6 @@ Las vistas y `ProductosPage` no cambian: reciben los mismos arrays
 
 ## Paleta
 
-- Azul institucional `#0D2B5E` (profundo `#071B3D`)
+- Azul institucional `#002B56` (profundo `#071B3D`)
 - Rojo `#E11A22`
 - Tipografía Montserrat

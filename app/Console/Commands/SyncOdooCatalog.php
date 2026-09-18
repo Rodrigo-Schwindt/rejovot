@@ -121,6 +121,7 @@ class SyncOdooCatalog extends Command
                         'name' => $row['name'],
                         'oem_codes' => $row['oem_code'] ?: null,
                         'type' => $row['type'] ?: null,
+                        'extra_image_ids' => $row['product_template_image_ids'] ?: null,
                         'category_id' => $categorias[$categoriaOdoo] ?? null,
                         // lst_price_with_margin ya es el precio de la tarifa pública.
                         'list_price' => $row['lst_price_with_margin'] ?? 0,

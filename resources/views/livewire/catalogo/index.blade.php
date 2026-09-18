@@ -31,7 +31,7 @@
                 ['En el sitio', $totales['publicados'], 'estado=publicados', 'text-green-700'],
                 ['Ocultos', $totales['ocultos'], 'estado=ocultos', 'text-slate-600'],
                 ['En oferta', $totales['ofertas'], 'oferta=1', 'text-[#E11A22]'],
-                ['En el banner', $totales['destacados'], 'estado=todos&destacado=1', 'text-[#0D2B5E]'],
+                ['En el banner', $totales['destacados'], 'estado=todos&destacado=1', 'text-[#002B56]'],
             ];
         @endphp
 
@@ -101,7 +101,7 @@
                 </label>
                 <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
                     <input type="checkbox" name="destacado" value="1" @checked($filtros['destacado'])
-                           class="h-4 w-4 rounded border-slate-300 accent-[#0D2B5E]">
+                           class="h-4 w-4 rounded border-slate-300 accent-[#002B56]">
                     En el banner
                 </label>
             </div>

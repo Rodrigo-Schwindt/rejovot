@@ -7,14 +7,15 @@
     $subtitulo = $subtitulo ?? null;
     $accion = $accion ?? null;   // wire:click
     $href = $href ?? null;       // link
-    $clases = 'flex w-full items-center justify-between gap-4 border-b border-slate-200 px-2 py-5 text-left transition hover:bg-slate-50';
+    $clases = 'flex w-full cursor-pointer items-center justify-between gap-4 border-b border-slate-200 px-2 py-5 text-left transition hover:bg-slate-50';
 @endphp
 
 <{{ $href ? 'a' : 'button' }}
     @if($href) href="{{ $href }}" wire:navigate @else type="button" wire:click="{{ $accion }}" @endif
     class="{{ $clases }}">
 
-    <span>
+    {{-- min-w-0 + break-words: en pantallas angostas los códigos largos se parten en vez de desbordar. --}}
+    <span class="max-lg:min-w-0 max-lg:break-words">
         <span class="block text-[19px] font-bold uppercase leading-[130%] text-slate-900">{{ $titulo }}</span>
         @if($subtitulo)
             <span class="mt-1 block text-[17px] leading-[140%] text-slate-700">{{ $subtitulo }}</span>

@@ -5,18 +5,19 @@
     - Visitante: ve el catálogo a precio de lista.
 --}}
 <section class="mb-6" x-data="{ abierto: false }" @click.outside="abierto = false" @keydown.escape.window="abierto = false">
-    <h2 class="mb-3 text-[20px] font-bold text-slate-900">Cliente</h2>
+    <h2 class="mb-3 text-[20px] font-semibold text-black">Cliente</h2>
 
     <div class="relative w-full max-w-[560px]">
 
         @if($clienteElegido)
-            <div class="flex items-start justify-between gap-3 rounded-[4px] border border-[#0D2B5E] bg-white px-3 py-2.5">
+            <div wire:key="cliente-{{ $clienteElegido->id }}"
+                 class="anim-aparecer flex items-start justify-between gap-3 rounded-[4px] border border-[#002B56] bg-white px-3 py-2.5">
                 <div class="min-w-0">
                     <p class="truncate text-[15px] font-semibold text-slate-800">{{ $clienteElegido->name }}</p>
                     <p class="mt-0.5 text-[13px] text-slate-500">
                         @if($clienteElegido->vat) CUIT {{ $clienteElegido->vat }} @endif
                         @if($clienteElegido->price_discount > 0)
-                            · <span class="font-semibold text-[#0D2B5E]">{{ rtrim(rtrim(number_format((float) $clienteElegido->price_discount, 2, ',', '.'), '0'), ',') }}% de descuento</span>
+                            · <span class="font-semibold text-[#002B56]">{{ rtrim(rtrim(number_format((float) $clienteElegido->price_discount, 2, ',', '.'), '0'), ',') }}% de descuento</span>
                         @endif
                         @if($clienteElegido->salesperson) · {{ $clienteElegido->salesperson->name }} @endif
                     </p>
@@ -52,13 +53,20 @@
                     </svg>
                 </button>
 
-                <div x-show="abierto" x-cloak x-transition.opacity.duration.100ms
-                     class="absolute z-40 mt-1 w-full overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-[0_12px_32px_rgba(13,43,94,.22)]">
+                <div x-show="abierto" x-cloak
+                     x-transition:enter="transition duration-200 ease-out"
+                     x-transition:enter-start="-translate-y-1 scale-[.98] opacity-0"
+                     x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                     x-transition:leave="transition duration-150 ease-in"
+                     x-transition:leave-start="translate-y-0 opacity-100"
+                     x-transition:leave-end="-translate-y-1 opacity-0"
+                     x-effect="if (abierto && window.matchMedia('(hover: hover)').matches) $nextTick(() => $refs.buscarCliente?.focus())"
+                     class="absolute z-40 mt-1 w-full origin-top overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-[0_12px_32px_rgba(13,43,94,.22)]">
 
                     <div class="border-b border-slate-100 p-2">
-                        <input id="buscar-cliente" type="text" wire:model.live.debounce.400ms="buscarCliente"
+                        <input id="buscar-cliente" type="text" wire:model.live.debounce.400ms="buscarCliente" x-ref="buscarCliente"
                                placeholder="Buscar por nombre o CUIT…" autocomplete="off"
-                               class="h-[38px] w-full rounded border border-slate-200 px-3 text-[14px] text-slate-700 outline-none focus:border-[#0D2B5E]">
+                               class="h-[38px] w-full rounded border border-slate-200 px-3 text-[14px] text-slate-700 outline-none focus:border-[#002B56]">
                     </div>
 
                     <ul class="max-h-[320px] overflow-y-auto py-1">
@@ -80,7 +88,7 @@
 
                     <p class="border-t border-slate-100 px-3 py-2 text-[12px] text-slate-400">
                         @if(trim($buscarCliente) === '')
-                            Mostrando {{ count($clientes) }} de tus {{ $totalCartera }} clientes. Escribí para buscar.
+                            Tus {{ $totalCartera }} {{ $totalCartera === 1 ? 'cliente' : 'clientes' }}. Escribí para buscar.
                         @else
                             {{ count($clientes) }} {{ count($clientes) === 1 ? 'resultado' : 'resultados' }} en tus {{ $totalCartera }} clientes.
                         @endif
@@ -89,10 +97,10 @@
             @endif
         @else
             {{-- Visitante: puede mirar, no operar --}}
-            <div class="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-slate-300 bg-slate-50 px-4 py-3">
+            <div class="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-slate-300 bg-slate-50 px-2 py-1">
                 <p class="text-[14px] text-slate-600">Estás viendo precios de lista.</p>
                 <a href="{{ route('ingresar') }}"
-                   class="inline-flex h-[38px] items-center rounded-[4px] bg-[#0D2B5E] px-5 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]">
+                   class="inline-flex h-[42px] items-center rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold  tracking-wide text-white transition hover:bg-[#0A2249] max-sm:w-full max-sm:justify-center">
                     Ingresar
                 </a>
             </div>
@@ -100,7 +108,7 @@
     </div>
 
     @if($motivoBloqueo && $puedeElegirCliente)
-        <p class="mt-2 flex items-center gap-2 text-[13px] font-medium text-[#E11A22]">
+        <p class="anim-aparecer mt-2 flex items-center gap-2 text-[13px] font-medium text-[#E11A22]">
             <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
             {{ $motivoBloqueo }}
         </p>

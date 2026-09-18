@@ -11,7 +11,7 @@ namespace App\Services\Odoo;
  */
 class OdooPedidos
 {
-    /** Presupuestos y borradores no se muestran: el cliente ve lo confirmado. */
+    /** Lo confirmado, más los presupuestos que el propio cliente cargó desde la web. */
     protected const ESTADOS_VISIBLES = ['sale', 'done', 'cancel'];
 
     protected const CAMPOS = [
@@ -101,12 +101,75 @@ class OdooPedidos
         return $porPedido;
     }
 
+    /**
+     * Crea el pedido en Odoo como presupuesto (borrador), para que Rejovot lo
+     * revise y lo confirme desde el ERP.
+     *
+     * Los precios NO se mandan: Odoo los calcula con la tarifa del cliente al
+     * crear cada línea, igual que cuando cargan un pedido a mano. Lo único que
+     * se manda con precio es la línea del envío, que es como la arma Odoo.
+     *
+     * @param  array<int, array{product_id:int, cantidad:float}>  $lineas
+     * @param  array{id:int, producto_id:?int, importe:float}|null  $envio
+     * @return array{id:int, name:string}
+     */
+    public function crear(int $partnerId, array $lineas, ?array $envio, ?int $vendedorUid, string $observaciones = ''): array
+    {
+        $partner = $this->odoo->read('res.partner', [$partnerId], [
+            'property_payment_term_id',
+            'property_account_position_id',
+            'user_id',
+        ])[0] ?? [];
+
+        $orderLines = array_map(fn (array $l) => [0, 0, [
+            'product_id' => $l['product_id'],
+            'product_uom_qty' => $l['cantidad'],
+        ]], $lineas);
+
+        if ($envio && $envio['producto_id']) {
+            $orderLines[] = [0, 0, [
+                'product_id' => $envio['producto_id'],
+                'product_uom_qty' => 1,
+                'price_unit' => $envio['importe'],
+                'is_delivery' => true,
+            ]];
+        }
+
+        $id = $this->odoo->create('sale.order', [
+            'partner_id' => $partnerId,
+            'company_id' => config('odoo.company_id'),
+            'warehouse_id' => config('odoo.warehouse_id'),
+            // Lo que en pantalla pone el onchange del cliente.
+            'payment_term_id' => $partner['property_payment_term_id'][0] ?? false,
+            'fiscal_position_id' => $partner['property_account_position_id'][0] ?? false,
+            // La venta se le acredita al vendedor que la cargó; si no, al de la cartera.
+            'user_id' => $vendedorUid ?: ($partner['user_id'][0] ?? false),
+            'carrier_id' => $envio['id'] ?? false,
+            'origin' => 'Web',
+            'order_line' => $orderLines,
+        ]);
+
+        if (trim($observaciones) !== '') {
+            // Al chatter del pedido: ahí lo ve quien lo prepara.
+            $this->odoo->call('sale.order', 'message_post', [[$id]], [
+                'body' => 'Mensaje del cliente desde la web: ' . e(trim($observaciones)),
+                'message_type' => 'comment',
+            ]);
+        }
+
+        $creado = $this->odoo->read('sale.order', [$id], ['name'])[0] ?? [];
+
+        return ['id' => $id, 'name' => $creado['name'] ?? (string) $id];
+    }
+
     protected function dominio(int $partnerId): array
     {
         return [
             ['partner_id', '=', $partnerId],
             ['company_id', '=', config('odoo.company_id')],
+            '|',
             ['state', 'in', self::ESTADOS_VISIBLES],
+            '&', ['state', 'in', ['draft', 'sent']], ['origin', '=', 'Web'],
         ];
     }
 }

@@ -1,16 +1,26 @@
 @php use App\Support\Precio; @endphp
 
 {{-- Resumen del pedido --}}
-<div class="rounded-[4px] border border-slate-200 bg-white">
-    <h2 class="border-b border-slate-200 bg-slate-50 px-5 py-4 text-[18px] font-bold text-slate-900">Tu pedido</h2>
+<div class="anim-entrada rounded-[4px] border border-slate-200 bg-white" style="--retraso: 380">
+    <h2 class="border-b border-slate-200 bg-[#F8F8F8] px-5 py-4 text-[18px] font-bold text-[#111]">Tu pedido</h2>
 
-    <div class="px-5 py-5">
-        <div class="flex items-center justify-between py-1.5 text-[15px] text-slate-700">
+    {{-- La clave cambia con los totales: al recalcular, el bloque vuelve a aparecer con un fundido. --}}
+    <div wire:key="totales-{{ md5(json_encode([$totales, $sinStock, $envioBonificado])) }}"
+         class="rj-transicion-carga anim-aparecer px-5 py-5"
+         wire:loading.class="opacity-40" wire:target="cantidades, quitar, entrega, cancelar">
+        @if($sinStock > 0)
+            <p class="mb-3 rounded bg-slate-50 px-3 py-2 text-[13px] leading-[140%] text-[#111]">
+                {{ $sinStock === 1 ? 'Un producto sin stock no entra' : "{$sinStock} productos sin stock no entran" }}
+                en este pedido: quedan en el carrito para cuando ingresen.
+            </p>
+        @endif
+
+        <div class="flex items-center justify-between py-1.5 text-[15px] text-[#111]">
             <span>Subtotal</span>
             <span class="font-medium text-slate-900">{{ Precio::ar($totales['subtotal']) }}</span>
         </div>
 
-        <div class="flex items-center justify-between py-1.5 text-[15px] text-slate-700">
+        <div class="flex items-center justify-between py-1.5 text-[15px] text-[#111]">
             <span class="flex items-center gap-2">
                 {{ $envioElegido['nombre'] ?? 'Entrega' }}
                 @if($envioBonificado)

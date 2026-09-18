@@ -19,7 +19,7 @@
         </div>
         <div class="flex gap-2 text-xs">
             <a href="{{ route('admin.pagos.comprobantes.index') }}"
-               class="inline-flex items-center rounded px-2 py-1 font-medium {{ $estado === '' ? 'bg-[#0D2B5E] text-white' : 'bg-slate-100 text-slate-600' }}">Todos</a>
+               class="inline-flex items-center rounded px-2 py-1 font-medium {{ $estado === '' ? 'bg-[#002B56] text-white' : 'bg-slate-100 text-slate-600' }}">Todos</a>
             <a href="{{ route('admin.pagos.comprobantes.index', ['estado' => 'pendiente']) }}"
                class="inline-flex items-center rounded px-2 py-1 font-medium {{ $estado === 'pendiente' ? 'bg-[#E11A22] text-white' : 'bg-amber-100 text-amber-700' }}">{{ $totalPendientes }} pendientes</a>
             <a href="{{ route('admin.pagos.comprobantes.index', ['estado' => 'procesado']) }}"

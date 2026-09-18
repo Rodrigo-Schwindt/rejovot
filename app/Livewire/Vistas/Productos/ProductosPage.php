@@ -206,8 +206,8 @@ class ProductosPage extends Component
     }
 
     /**
-     * Cartera del vendedor. Sin texto muestra los primeros: el vendedor tiene
-     * que ver a sus clientes sin necesidad de adivinar cómo están escritos.
+     * Cartera del vendedor. Sin texto muestra la cartera completa: el vendedor
+     * tiene que ver a sus clientes sin necesidad de adivinar cómo están escritos.
      */
     private function buscarClientes()
     {
@@ -220,7 +220,6 @@ class ProductosPage extends Component
         return $this->cartera()
             ->buscar($this->buscarCliente)
             ->orderBy('name')
-            ->limit(15)
             ->get();
     }
 

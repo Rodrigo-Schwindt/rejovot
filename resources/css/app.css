@@ -12,7 +12,7 @@
     --font-montserrat: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 
     /* Paleta institucional Rejovot */
-    --color-rj-navy: #0d2b5e;
+    --color-rj-navy: #002B56;
     --color-rj-navy-deep: #0a2249;
     --color-rj-navy-soft: #123a7a;
     --color-rj-red: #e11a22;
@@ -31,5 +31,79 @@
 
     [x-cloak] {
         display: none !important;
+    }
+
+    /* Inputs de cantidad con flechas propias: se oculta el spinner del navegador. */
+    input.cantidad::-webkit-outer-spin-button,
+    input.cantidad::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input.cantidad {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+}
+
+/* ------------------------------------------------------------------
+   Animaciones de entrada del catálogo.
+   Sólo afectan el "cómo aparece" cada bloque: terminan en su estado
+   natural, así el diseño de escritorio queda exactamente igual.
+   fill-mode "backwards": mantiene el estado inicial durante el retraso y,
+   al terminar, el elemento vuelve a no tener transform (si quedara uno
+   aplicado crearía un stacking context y movería los hijos absolute/fixed).
+   --retraso (ms) permite escalonar listas: style="--retraso: 120".
+------------------------------------------------------------------- */
+@layer components {
+    @keyframes rj-entrada {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: none; }
+    }
+    @keyframes rj-aparecer {
+        from { opacity: 0; transform: scale(.985); }
+        to   { opacity: 1; transform: none; }
+    }
+    @keyframes rj-fila {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    /* Barra de progreso: crece desde cero hasta el ancho que trae en style. */
+    @keyframes rj-barra {
+        from { width: 0; }
+    }
+
+    .anim-entrada {
+        animation: rj-entrada .55s cubic-bezier(.22, 1, .36, 1) backwards;
+        animation-delay: calc(var(--retraso, 0) * 1ms);
+    }
+    .anim-aparecer {
+        animation: rj-aparecer .4s cubic-bezier(.22, 1, .36, 1) backwards;
+        animation-delay: calc(var(--retraso, 0) * 1ms);
+    }
+    .anim-fila {
+        animation: rj-fila .35s ease-out backwards;
+        animation-delay: calc(var(--retraso, 0) * 1ms);
+    }
+    .anim-barra {
+        animation: rj-barra .9s cubic-bezier(.22, 1, .36, 1) backwards;
+        animation-delay: calc(var(--retraso, 0) * 1ms);
+    }
+
+    /* Mientras Livewire filtra o cambia de página, el listado se atenúa. */
+    .rj-cargando {
+        opacity: .45;
+        pointer-events: none;
+    }
+    .rj-transicion-carga {
+        transition: opacity .25s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .anim-entrada,
+        .anim-aparecer,
+        .anim-fila,
+        .anim-barra {
+            animation: none;
+        }
     }
 }

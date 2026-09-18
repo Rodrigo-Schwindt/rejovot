@@ -6,9 +6,9 @@
     $variant = $variant ?? 'color';
     $class = $class ?? 'h-14 w-auto';
     $blanco = $variant === 'blanco';
-    $shield = $blanco ? '#FFFFFF' : '#0D2B5E';
-    $shieldText = $blanco ? '#0D2B5E' : '#FFFFFF';
-    $word = $blanco ? '#FFFFFF' : '#0D2B5E';
+    $shield = $blanco ? '#FFFFFF' : '#002B56';
+    $shieldText = $blanco ? '#002B56' : '#FFFFFF';
+    $word = $blanco ? '#FFFFFF' : '#002B56';
     $band = '#E11A22';
 @endphp
 

@@ -71,7 +71,7 @@
                         <td class="px-4 py-3 font-medium text-slate-800">
                             {{ $lista->descripcion }}
                             @if($lista->es_automatica)
-                                <span class="ml-1 inline-flex items-center rounded bg-blue-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-[#0D2B5E]">
+                                <span class="ml-1 inline-flex items-center rounded bg-blue-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-[#002B56]">
                                     Automática
                                 </span>
                             @endif
@@ -101,7 +101,7 @@
                                 @if($lista->es_automatica)
                                     <form method="POST" action="{{ route('admin.precios.regenerar') }}">
                                         @csrf
-                                        <button type="submit" class="cursor-pointer rounded bg-blue-50 px-2 py-1 text-xs font-medium text-[#0D2B5E] transition hover:bg-blue-100">
+                                        <button type="submit" class="cursor-pointer rounded bg-blue-50 px-2 py-1 text-xs font-medium text-[#002B56] transition hover:bg-blue-100">
                                             Actualizar ahora
                                         </button>
                                     </form>

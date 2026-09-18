@@ -36,4 +36,7 @@ interface CatalogoRepository
 
     /** Ficha ampliada de un producto por código. */
     public function detalle(string $codigo): ?array;
+
+    /** Alternativos y accesorios que Odoo le cargó al producto. */
+    public function relacionados(string $codigo): array;
 }

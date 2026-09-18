@@ -4,7 +4,7 @@
     <div class="mx-auto w-full max-w-[1300px] px-4 py-6 xl:px-6">
 
         <nav class="mb-8 text-[13px] text-slate-500" aria-label="Migas de pan">
-            <a wire:navigate href="{{ route('home') }}" class="font-semibold text-slate-700 transition hover:text-[#0D2B5E]">Inicio</a>
+            <a wire:navigate href="{{ route('home') }}" class="font-semibold text-slate-700 transition hover:text-[#002B56]">Inicio</a>
             <span class="mx-1.5 text-slate-400">&gt;</span>
             <span>Información de pagos</span>
         </nav>

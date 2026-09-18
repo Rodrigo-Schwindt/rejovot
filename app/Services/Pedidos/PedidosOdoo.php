@@ -183,6 +183,11 @@ class PedidosOdoo implements PedidosRepository
             return 'cancelado';
         }
 
+        // Presupuesto cargado desde la web que Rejovot todavía no confirmó.
+        if (in_array($state, ['draft', 'sent'], true)) {
+            return 'revision';
+        }
+
         if ($aEntregar > 0 && $entregadas === $aEntregar) {
             return 'entregado';
         }

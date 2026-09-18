@@ -8,17 +8,12 @@ use Illuminate\Support\Facades\Session;
 
 /**
  * Carrito guardado en sesión. Los productos se resuelven contra
- * CatalogoRepository, así que cuando entre Odoo sólo cambia el repositorio;
- * más adelante este carrito pasa a ser el pedido (sale.order) de Odoo.
+ * CatalogoRepository; al confirmar, `EnviarPedido` lo convierte en un
+ * pedido de Odoo (sale.order).
  */
 class Carrito
 {
     private const SESSION_KEY = 'carrito';
-
-    private const SESSION_INIT = 'carrito_inicializado';
-
-    /** Ítems de muestra para que la vista se vea cargada en la demo. */
-    private const DEMO = ['BS009.0868' => 1, 'PO507.0868' => 1];
 
     public function __construct(private CatalogoRepository $catalogo)
     {
@@ -44,6 +39,18 @@ class Carrito
         }
 
         return $items;
+    }
+
+    /** Lo que entra en el pedido: sólo lo que tiene stock. */
+    public function itemsConStock(): array
+    {
+        return array_values(array_filter($this->items(), fn (array $item) => $item['producto']['stock'] !== 'rojo'));
+    }
+
+    /** Lo que espera en el carrito hasta que ingrese stock. */
+    public function itemsSinStock(): array
+    {
+        return array_values(array_filter($this->items(), fn (array $item) => $item['producto']['stock'] === 'rojo'));
     }
 
     public function agregar(string $codigo, int $cantidad = 1): void
@@ -75,6 +82,18 @@ class Carrito
         $this->guardar($lineas);
     }
 
+    /** @param  array<int, string>  $codigos */
+    public function quitarVarios(array $codigos): void
+    {
+        $lineas = $this->lineas();
+
+        foreach ($codigos as $codigo) {
+            unset($lineas[$codigo]);
+        }
+
+        $this->guardar($lineas);
+    }
+
     public function vaciar(): void
     {
         $this->guardar([]);
@@ -91,12 +110,10 @@ class Carrito
         return collect($this->items())->sum('subtotal');
     }
 
-    /** Importe de los ítems con stock: es el que define el envío bonificado. */
+    /** Importe de lo que entra en el pedido: lo sin stock no se cobra ni se cuenta. */
     public function subtotalConStock(): float
     {
-        return collect($this->items())
-            ->filter(fn (array $item) => $item['producto']['stock'] !== 'rojo')
-            ->sum('subtotal');
+        return collect($this->itemsConStock())->sum('subtotal');
     }
 
     /** El envío se bonifica según lo que diga la forma de entrega de Odoo. */
@@ -125,17 +142,11 @@ class Carrito
     /** @return array<string, int> */
     private function lineas(): array
     {
-        if (! Session::has(self::SESSION_INIT)) {
-            Session::put(self::SESSION_INIT, true);
-            Session::put(self::SESSION_KEY, self::DEMO);
-        }
-
         return Session::get(self::SESSION_KEY, []);
     }
 
     private function guardar(array $lineas): void
     {
-        Session::put(self::SESSION_INIT, true);
         Session::put(self::SESSION_KEY, $lineas);
     }
 }

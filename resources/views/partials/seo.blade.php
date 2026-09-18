@@ -20,6 +20,11 @@
 <meta property="og:description" content="{{ $seo['description'] }}">
 <meta property="og:url" content="{{ $seo['canonical'] }}">
 <meta property="og:image" content="{{ $seo['image'] }}">
+<meta property="og:image:secure_url" content="{{ $seo['image'] }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ $seo['site_name'] }}">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ $seo['title'] }}">
@@ -27,4 +32,4 @@
 <meta name="twitter:image" content="{{ $seo['image'] }}">
 
 <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-<meta name="theme-color" content="#0D2B5E">
+<meta name="theme-color" content="#002B56">

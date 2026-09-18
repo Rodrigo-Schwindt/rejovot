@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Cuenta\ComprobantesController as CuentaComprobantesController;
+use App\Http\Controllers\Clientes\ClientesAdminController;
+use App\Http\Controllers\Clientes\VendedoresAdminController;
 use App\Http\Controllers\Auth\IngresoController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Catalogo\ProductosAdminController;
@@ -93,6 +95,11 @@ Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function
     Route::post('/cuentas-bancarias', [CuentasBancariasController::class, 'save'])->name('admin.pagos.cuentas.save');
 
     Route::get('/comprobantes', [ComprobantesController::class, 'index'])->name('admin.pagos.comprobantes.index');
+
+    Route::get('/clientes', [ClientesAdminController::class, 'index'])->name('admin.clientes.index');
+    Route::get('/clientes/{cliente}', [ClientesAdminController::class, 'show'])->name('admin.clientes.show');
+    Route::get('/vendedores', [VendedoresAdminController::class, 'index'])->name('admin.vendedores.index');
+    Route::get('/vendedores/{vendedor}', [VendedoresAdminController::class, 'show'])->name('admin.vendedores.show');
     Route::get('/comprobantes/{comprobante}/descargar', [ComprobantesController::class, 'download'])->name('admin.pagos.comprobantes.download');
     Route::patch('/comprobantes/{comprobante}/estado', [ComprobantesController::class, 'estado'])->name('admin.pagos.comprobantes.estado');
     Route::delete('/comprobantes/{comprobante}', [ComprobantesController::class, 'destroy'])->name('admin.pagos.comprobantes.destroy');

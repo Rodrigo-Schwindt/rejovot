@@ -37,7 +37,7 @@
                         <td class="hidden px-4 py-3 text-slate-500 sm:table-cell">{{ $u->email }}</td>
                         <td class="hidden px-4 py-3 md:table-cell">
                             <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium
-                                {{ $u->role === 'admin' ? 'bg-red-50 text-[#E11A22]' : ($u->role === 'viewer' ? 'bg-blue-50 text-[#0D2B5E]' : 'bg-slate-100 text-slate-600') }}">
+                                {{ $u->role === 'admin' ? 'bg-red-50 text-[#E11A22]' : ($u->role === 'viewer' ? 'bg-blue-50 text-[#002B56]' : 'bg-slate-100 text-slate-600') }}">
                                 {{ $u->role === 'admin' ? 'Admin' : ($u->role === 'viewer' ? 'Espectador' : 'Usuario') }}
                             </span>
                         </td>

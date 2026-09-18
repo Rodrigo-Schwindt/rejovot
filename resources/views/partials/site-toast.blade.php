@@ -35,7 +35,7 @@
 >
     <div class="flex min-w-[300px] max-w-[440px] items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-[0_16px_40px_rgba(13,43,94,.18)] ring-1 ring-black/5">
         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-              :class="type === 'error' ? 'bg-[#E11A22]' : 'bg-[#0D2B5E]'">
+              :class="type === 'error' ? 'bg-[#E11A22]' : 'bg-[#002B56]'">
             <svg x-show="type !== 'error'" class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m5 13 4 4L19 7"/></svg>
             <svg x-show="type === 'error'" class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18 18 6M6 6l12 12"/></svg>
         </span>

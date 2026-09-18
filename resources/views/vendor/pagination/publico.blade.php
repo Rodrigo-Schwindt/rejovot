@@ -6,8 +6,8 @@
     $volverArriba = "document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })";
     $boton = 'inline-flex h-[42px] min-w-[42px] items-center justify-center rounded-[4px] border px-3 text-[14px] font-semibold transition';
     $inactivo = 'border-slate-300 text-slate-500 cursor-not-allowed';
-    $normal = 'border-slate-300 text-slate-700 cursor-pointer hover:border-[#0D2B5E] hover:text-[#0D2B5E]';
-    $actual = 'border-[#0D2B5E] bg-[#0D2B5E] text-white cursor-default';
+    $normal = 'border-slate-300 text-slate-700 cursor-pointer hover:border-[#002B56] hover:text-[#002B56]';
+    $actual = 'border-[#002B56] bg-[#002B56] text-white cursor-default';
 @endphp
 
 @if ($paginator->hasPages())

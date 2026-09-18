@@ -10,13 +10,13 @@
             <td align="center">
                 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;">
                     <tr>
-                        <td style="background:#0D2B5E;padding:22px 28px;color:#ffffff;font-size:20px;font-weight:bold;">
+                        <td style="background:#002B56;padding:22px 28px;color:#ffffff;font-size:20px;font-weight:bold;">
                             REJOVOT AUTOPARTES
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:28px;color:#1f2937;font-size:15px;line-height:1.7;">
-                            <h1 style="margin:0 0 16px;font-size:19px;color:#0D2B5E;">{{ $asunto }}</h1>
+                            <h1 style="margin:0 0 16px;font-size:19px;color:#002B56;">{{ $asunto }}</h1>
                             <div>{!! nl2br(e($cuerpo)) !!}</div>
                         </td>
                     </tr>

@@ -1,6 +1,6 @@
 @php use App\Support\Precio; @endphp
 
-<h2 style="font-family: Arial, sans-serif; color: #0D2B5E;">Nuevo comprobante de pago</h2>
+<h2 style="font-family: Arial, sans-serif; color: #002B56;">Nuevo comprobante de pago</h2>
 
 <p style="font-family: Arial, sans-serif; color: #334155; font-size: 15px;">
     {{ $comprobante->customer?->name ?? 'Un cliente sin identificar' }} cargó un comprobante desde el sitio.
@@ -43,5 +43,5 @@
 
 <p style="font-family: Arial, sans-serif; font-size: 14px;">
     El comprobante va adjunto y queda cargado en
-    <a href="{{ route('admin.pagos.comprobantes.index') }}" style="color: #0D2B5E;">Cuenta corriente</a>.
+    <a href="{{ route('admin.pagos.comprobantes.index') }}" style="color: #002B56;">Cuenta corriente</a>.
 </p>

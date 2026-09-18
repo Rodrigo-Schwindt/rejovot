@@ -6,12 +6,19 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials.seo')
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
     <style>
+        html, body, button, input, select, textarea, h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+        }
         :root {
-            --rj-navy: #0D2B5E;
+            --rj-navy: #002B56;
             --rj-navy-deep: #0A2249;
             --rj-red: #E11A22;
         }
@@ -32,9 +39,11 @@
         $contactData = \App\Models\Contact::with('infoItems')->first();
         $wsspItem = $contactData?->infoItems->firstWhere('type', 'whatsapp_flotante');
         $wssp = $wsspItem->value ?? $contactData?->wssp;
+        // En el detalle de un producto queda activa la sección desde la que se llegó.
+        $desdeVehiculos = request()->routeIs('producto') && request('desde') === 'vehiculos';
         $navItems = [
-            ['label' => 'Productos', 'route' => 'productos'],
-            ['label' => 'Búsqueda por vehículo', 'route' => 'vehiculos'],
+            ['label' => 'Productos', 'route' => 'productos', 'activo' => request()->routeIs('producto') && ! $desdeVehiculos],
+            ['label' => 'Búsqueda por vehículo', 'route' => 'vehiculos', 'activo' => $desdeVehiculos],
             ['label' => 'Carrito', 'route' => 'carrito'],
             ['label' => 'Mis Pedidos', 'route' => 'pedidos'],
             ['label' => 'Lista de precios', 'route' => 'precios'],
@@ -48,38 +57,41 @@
 
     <header x-data="{ open: false }" @keydown.escape.window="open = false"
             class="relative z-30 w-full bg-white" style="box-shadow: 0 4px 7px rgba(0,0,0,.05);">
-        <div class="mx-auto flex h-[92px] w-full max-w-[1300px] items-center justify-between gap-4 px-4 xl:px-6">
+        <div class="mx-auto flex h-[150px] w-full max-w-[1300px] items-center justify-between gap-4 px-4 xl:px-6">
 
             <a wire:navigate href="{{ route('productos') }}" class="flex shrink-0 items-center" aria-label="Rejovot Autopartes">
                 @if($contactData?->icono_1)
-                    <img src="{{ Storage::url($contactData->icono_1) }}" alt="Rejovot Autopartes" class="h-[62px] w-auto object-contain">
+                    <img src="{{ Storage::url($contactData->icono_1) }}" alt="Rejovot Autopartes" class="h-[128px] w-auto object-contain">
                 @else
-                    @include('partials.logo', ['class' => 'h-[62px] w-auto'])
+                    @include('partials.logo', ['class' => 'h-[128px] w-auto'])
                 @endif
             </a>
 
-            <nav class="hidden items-center gap-[18px] xl:flex">
+            <nav class="hidden min-w-0 items-center gap-[18px] xl:flex">
                 @foreach($navItems as $item)
-                    @php $activo = $item['route'] && request()->routeIs($item['route']); @endphp
+                    @php $activo = ($item['activo'] ?? false) || ($item['route'] && request()->routeIs($item['route'])); @endphp
                     <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
                        @if($item['route']) wire:navigate @endif
-                       class="nav-link text-[15px] leading-none text-[#101828] {{ $activo ? 'active text-[#0D2B5E]' : '' }}">
+                       class="nav-link shrink-0 text-[15px] leading-none text-[#101828] {{ $activo ? 'active text-[#002B56]' : '' }}">
                         {{ $item['label'] }}
                     </a>
                 @endforeach
 
                 @auth('sitio')
-                    <div class="relative ml-1 shrink-0" x-data="{ abierto: false }" @click.outside="abierto = false">
+                    {{-- El nombre se corta para no desbordar el header; completo se ve en el desplegable. --}}
+                    <div class="relative ml-1 min-w-[96px] max-w-[200px] flex-1 shrink" x-data="{ abierto: false }" @click.outside="abierto = false">
                         <button type="button" @click="abierto = !abierto"
-                                class="inline-flex h-[42px] cursor-pointer items-center gap-2 whitespace-nowrap rounded-[4px] bg-[#0D2B5E] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]">
-                            {{ Str::limit(auth('sitio')->user()->name, 16) }}
-                            <svg class="h-4 w-4 transition" :class="abierto && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                                class="flex h-[42px] w-full min-w-0 cursor-pointer items-center gap-2 rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]"
+                                title="{{ auth('sitio')->user()->name }}">
+                            <span class="min-w-0 truncate">{{ auth('sitio')->user()->name }}</span>
+                            <svg class="h-4 w-4 shrink-0 transition" :class="abierto && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
                         </button>
 
                         <div x-show="abierto" x-cloak x-transition.opacity.duration.100ms
-                             class="absolute right-0 z-50 mt-1 w-[240px] rounded-[4px] border border-slate-200 bg-white py-1 shadow-[0_12px_32px_rgba(13,43,94,.22)]">
+                             class="absolute right-0 z-50 mt-1 w-[260px] rounded-[4px] border border-slate-200 bg-white py-1 shadow-[0_12px_32px_rgba(13,43,94,.22)]">
                             <p class="border-b border-slate-100 px-4 py-2.5 text-[13px] text-slate-500">
-                                {{ auth('sitio')->user()->esVendedor() ? 'Vendedor' : 'Cliente' }}
+                                <span class="block text-[14px] font-semibold leading-[130%] text-slate-800">{{ auth('sitio')->user()->name }}</span>
+                                <span class="mt-0.5 block">{{ auth('sitio')->user()->esVendedor() ? 'Vendedor' : 'Cliente' }}</span>
                                 <span class="block truncate text-slate-700">{{ auth('sitio')->user()->email }}</span>
                             </p>
                             <form method="POST" action="{{ route('salir') }}">
@@ -91,19 +103,78 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('ingresar') }}"
-                       class="ml-1 inline-flex h-[42px] shrink-0 items-center whitespace-nowrap rounded-[4px] bg-[#0D2B5E] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]">
-                        Ingresar
-                    </a>
+                    {{-- Ingreso de clientes / vendedores: modal desplegable debajo del botón --}}
+                    <div class="relative ml-1 shrink-0"
+                         x-data="{ abierto: {{ $errors->has('login') || $errors->has('password') ? 'true' : 'false' }} }"
+                         @click.outside="abierto = false" @keydown.escape.window="abierto = false">
+                        <button type="button" @click="abierto = !abierto; $nextTick(() => abierto && $refs.login.focus())"
+                                class="inline-flex h-[42px] cursor-pointer items-center whitespace-nowrap rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]"
+                                :aria-expanded="abierto">
+                            Ingresar
+                        </button>
+
+                        <div x-show="abierto" x-cloak
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="-translate-y-1 opacity-0"
+                             x-transition:enter-end="translate-y-0 opacity-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="translate-y-0 opacity-100"
+                             x-transition:leave-end="-translate-y-1 opacity-0"
+                             class="absolute right-0 z-50 mt-2 w-[300px] rounded-[10px] bg-white px-6 pb-5 pt-6 shadow-[0_12px_40px_rgba(13,43,94,.25)]">
+                            <h2 class="text-center text-[22px] font-bold leading-none text-slate-900">Iniciar sesión</h2>
+
+                            @if($errors->has('login') || $errors->has('password'))
+                                <div class="mt-4 rounded-[4px] border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-600">
+                                    @foreach($errors->get('login') + $errors->get('password') as $error)<p>{{ $error }}</p>@endforeach
+                                </div>
+                            @endif
+
+                            <form method="POST" action="{{ route('ingresar.post') }}" class="mt-5 space-y-4">
+                                @csrf
+
+                                <div>
+                                    <label for="hdr-login" class="mb-1.5 block text-[14px] font-medium text-slate-700">Usuario</label>
+                                    <input id="hdr-login" x-ref="login" type="text" name="login" value="{{ old('login') }}" required
+                                           autocomplete="username" inputmode="email"
+                                           class="h-[42px] w-full rounded-[4px] border border-slate-300 px-3 text-[14px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#002B56]">
+                                </div>
+
+                                <div>
+                                    <label for="hdr-password" class="mb-1.5 block text-[14px] font-medium text-slate-700">Contraseña</label>
+                                    <input id="hdr-password" type="password" name="password" required autocomplete="current-password"
+                                           class="h-[42px] w-full rounded-[4px] border border-slate-300 px-3 text-[14px] text-slate-800 outline-none transition focus:border-[#002B56]">
+                                </div>
+
+                                <div class="flex justify-center pt-1">
+                                    <button type="submit"
+                                            class="h-[42px] cursor-pointer rounded-[4px] bg-[#002B56] px-6 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]">
+                                        Iniciar sesión
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="mt-5 border-t border-slate-200 pt-4 text-center">
+                                <a href="mailto:{{ $contactData?->mail_adm ?: 'ventas@rejovot.com.ar' }}?subject=Problemas%20para%20ingresar"
+                                   class="text-[14px] text-slate-800 underline underline-offset-4 transition hover:text-[#002B56]">
+                                    Problemas para ingresar
+                                </a>
+                                <p class="mt-1.5 text-[13px] text-slate-600">
+                                    ¿No tenés cuenta?
+                                    <a href="mailto:{{ $contactData?->mail_adm ?: 'ventas@rejovot.com.ar' }}?subject=Quiero%20registrarme"
+                                       class="underline underline-offset-2 transition hover:text-[#002B56]">Registrate</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 @endauth
             </nav>
 
             <button type="button" @click="open = true"
                     class="flex h-11 w-11 flex-col items-end justify-center gap-[6px] xl:hidden"
                     aria-label="Abrir menú" :aria-expanded="open">
-                <span class="block h-[3px] w-8 rounded bg-[#0D2B5E]"></span>
+                <span class="block h-[3px] w-8 rounded bg-[#002B56]"></span>
                 <span class="block h-[3px] w-6 rounded bg-[#E11A22]"></span>
-                <span class="block h-[3px] w-8 rounded bg-[#0D2B5E]"></span>
+                <span class="block h-[3px] w-8 rounded bg-[#002B56]"></span>
             </button>
         </div>
 
@@ -120,7 +191,7 @@
                x-transition:leave-end="translate-x-full opacity-0"
                class="fixed inset-y-0 right-0 z-[99] w-[85%] max-w-[380px] overflow-y-auto bg-white shadow-2xl xl:hidden">
 
-            <div class="flex items-center justify-between bg-[#0D2B5E] px-6 py-7">
+            <div class="flex items-center justify-between bg-[#002B56] px-6 py-7">
                 <div>
                     <h2 class="text-[22px] font-bold text-white">Menú</h2>
                     <p class="mt-1 text-[13px] text-white/70">{{ auth('sitio')->check() ? auth('sitio')->user()->name : 'Ingresá a tu cuenta' }}</p>
@@ -132,11 +203,11 @@
 
             <nav class="space-y-1 px-5 py-6">
                 @foreach($navItems as $item)
-                    @php $activo = $item['route'] && request()->routeIs($item['route']); @endphp
+                    @php $activo = ($item['activo'] ?? false) || ($item['route'] && request()->routeIs($item['route'])); @endphp
                     <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
                        @click="open = false"
                        class="block rounded-lg px-4 py-3 text-[15px] font-medium transition
-                              {{ $activo ? 'bg-[#0D2B5E] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#0D2B5E]' }}">
+                              {{ $activo ? 'bg-[#002B56] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#002B56]' }}">
                         {{ $item['label'] }}
                     </a>
                 @endforeach

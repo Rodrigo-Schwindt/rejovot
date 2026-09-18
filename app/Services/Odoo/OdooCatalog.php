@@ -55,6 +55,8 @@ class OdooCatalog
             'oem_code',
             // Almacenable / consumible / servicio.
             'type',
+            // Imágenes adicionales (product.image); la principal sale del template.
+            'product_template_image_ids',
             'categ_id',
             'qty_available',
             // Es el precio de lista público y coincide con el de la tarifa.

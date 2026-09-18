@@ -78,13 +78,17 @@ class OdooEnvios
         Cache::forget(self::CACHE_KEY);
     }
 
-    /** Los nombres vienen con relleno: "Retiro por REJOVOT .. --- MOSTRADOR ---..". */
-    /** Los nombres de Odoo vienen con asteriscos y guiones de relleno. */
+    /**
+     * Los nombres de Odoo vienen con asteriscos y guiones de relleno
+     * ("Retiro por REJOVOT .. --- MOSTRADOR ---.."). Si hay un nombre
+     * definido en config/carrito.php para mostrar en el sitio, se usa ese.
+     */
     public static function limpiarNombre(string $nombre): string
     {
         $limpio = preg_replace('/[*._\-]{2,}/u', ' ', $nombre);
         $limpio = preg_replace('/\s+/u', ' ', (string) $limpio);
+        $limpio = trim((string) $limpio);
 
-        return trim((string) $limpio);
+        return config('carrito.nombres_envio')[mb_strtolower($limpio)] ?? $limpio;
     }
 }

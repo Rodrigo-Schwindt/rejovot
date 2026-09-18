@@ -1,5 +1,5 @@
 @php
-    $campo = 'h-[52px] w-full rounded-[4px] border border-slate-200 bg-white px-3 text-[15px] text-slate-700 outline-none focus:border-[#0D2B5E]';
+    $campo = 'h-[52px] w-full rounded-[4px] border border-slate-200 bg-white px-3 text-[15px] text-slate-700 outline-none focus:border-[#002B56]';
     $etiqueta = 'mb-2 block text-[17px] text-slate-800';
 @endphp
 
@@ -43,7 +43,7 @@
     <div class="mt-5">
         <label for="pago-observaciones" class="{{ $etiqueta }}">Observaciones / Aclaraciones</label>
         <textarea id="pago-observaciones" wire:model="observaciones" rows="8"
-                  class="w-full resize-y rounded-[4px] border border-slate-200 bg-white p-3 text-[15px] leading-[150%] text-slate-700 outline-none focus:border-[#0D2B5E]"></textarea>
+                  class="w-full resize-y rounded-[4px] border border-slate-200 bg-white p-3 text-[15px] leading-[150%] text-slate-700 outline-none focus:border-[#002B56]"></textarea>
         @error('observaciones')<p class="mt-1 text-[13px] text-[#E11A22]">{{ $message }}</p>@enderror
     </div>
 
@@ -52,11 +52,11 @@
             <label for="pago-archivo" class="{{ $etiqueta }}">Adjuntar archivo*</label>
 
             <label for="pago-archivo"
-                   class="flex h-[52px] cursor-pointer items-center justify-between rounded-[4px] border bg-white px-3 text-[15px] transition hover:border-[#0D2B5E] @error('archivo') border-[#E11A22] @else border-slate-200 @enderror">
+                   class="flex h-[52px] cursor-pointer items-center justify-between rounded-[4px] border bg-white px-3 text-[15px] transition hover:border-[#002B56] @error('archivo') border-[#E11A22] @else border-slate-200 @enderror">
                 <span class="truncate {{ $archivo ? 'text-slate-800' : 'text-slate-500' }}">
                     {{ $archivo ? $archivo->getClientOriginalName() : 'Seleccionar archivo' }}
                 </span>
-                <svg class="ml-3 h-6 w-6 shrink-0 text-[#0D2B5E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-3 h-6 w-6 shrink-0 text-[#002B56]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15V3m0 0 4 4m-4-4L8 7M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
                 </svg>
             </label>
@@ -69,7 +69,7 @@
         <div class="flex items-center gap-6">
             <span class="whitespace-nowrap text-[17px] text-slate-700">* campos obligatorios</span>
             <button type="submit" wire:loading.attr="disabled" wire:target="enviar, archivo"
-                    class="h-[52px] cursor-pointer rounded-[4px] bg-[#0D2B5E] px-8 text-[17px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249] disabled:opacity-60">
+                    class="h-[52px] cursor-pointer rounded-[4px] bg-[#002B56] px-8 text-[17px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249] disabled:opacity-60">
                 <span wire:loading.remove wire:target="enviar">Enviar</span>
                 <span wire:loading wire:target="enviar">Enviando…</span>
             </button>

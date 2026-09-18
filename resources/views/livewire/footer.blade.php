@@ -1,4 +1,4 @@
-<footer class="relative flex flex-col bg-[#0D2B5E] text-white">
+<footer class="relative flex flex-col bg-[#002B56] text-white">
 
     <div class="flex-1 py-10 lg:py-14">
         <div class="mx-auto grid w-full max-w-[1300px] grid-cols-1 gap-10 px-4 text-center lg:grid-cols-[260px_240px_320px_minmax(0,1fr)] lg:gap-x-12 lg:text-left xl:px-6">
@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    <div class="border-t border-white/10 bg-black/25 py-5">
+    <div class=" bg-black/25 py-5">
         <div class="mx-auto flex w-full max-w-[1300px] flex-col items-center justify-between gap-2 px-4 text-center lg:flex-row lg:text-left xl:px-6">
             <p class="text-[13px] text-white/80">
                 © Copyright {{ date('Y') }} <strong>REJOVOT</strong>. Todos los derechos reservados

@@ -7,7 +7,7 @@
     @include('partials.seo')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-screen items-center justify-center bg-[#0D2B5E] px-4 py-10">
+<body class="flex min-h-screen items-center justify-center bg-[#002B56] px-4 py-10">
 
     <div class="w-full max-w-[420px]">
         <div class="mb-7 flex justify-center">
@@ -34,22 +34,22 @@
                 <div>
                     <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
                     <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                           class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#0D2B5E] focus:ring-3 focus:ring-[#0D2B5E]/15">
+                           class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#002B56] focus:ring-3 focus:ring-[#002B56]/15">
                 </div>
 
                 <div>
                     <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Contraseña</label>
                     <input id="password" type="password" name="password" required
-                           class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#0D2B5E] focus:ring-3 focus:ring-[#0D2B5E]/15">
+                           class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#002B56] focus:ring-3 focus:ring-[#002B56]/15">
                 </div>
 
                 <label class="flex items-center gap-2 text-sm text-slate-600">
-                    <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-slate-300 text-[#0D2B5E]">
+                    <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-slate-300 text-[#002B56]">
                     Mantener sesión iniciada
                 </label>
 
                 <button type="submit"
-                        class="w-full cursor-pointer rounded-lg bg-[#0D2B5E] py-2.5 text-sm font-semibold text-white transition hover:bg-[#071B3D]">
+                        class="w-full cursor-pointer rounded-lg bg-[#002B56] py-2.5 text-sm font-semibold text-white transition hover:bg-[#071B3D]">
                     Ingresar
                 </button>
             </form>
