@@ -5,21 +5,21 @@
 </p>
 {{-- relative: los sr-only (absolute) de la tabla quedan dentro del recorte y no ensanchan la página en mobile. --}}
 <div class="relative overflow-x-auto bg-white max-lg:overscroll-x-contain max-lg:[-webkit-overflow-scrolling:touch]">
-    <table class="w-full min-w-[820px] border-collapse">
+    <table class="w-full min-w-[720px] border-collapse">
         <thead>
             <tr class="border-b border-slate-200 bg-[#F8F8F8] text-[16px] font-semibold text-black">
-                <th class="w-[76px] px-3 py-4"><span class="sr-only">Imagen</span></th>
-                <th class="px-3 py-4 text-left">Producto</th>
+                <th class="w-[62px] px-2 py-4"><span class="sr-only">Imagen</span></th>
+                <th class="px-2 py-4 text-left">Producto</th>
                 @unless($mostrador)
-                    <th class="px-3 w-[230px] py-4 text-right whitespace-nowrap">Costo / Lista</th>
+                    <th class="px-2 py-4 text-right whitespace-nowrap">Precio lista</th>
                 @endunless
-                <th class="px-3 py-4 text-center">Cantidad</th>
+                <th class="px-2 py-4 text-center">Cantidad</th>
                 @unless($mostrador)
-                    <th class="px-3 py-4 text-right">Subtotal</th>
+                    <th class="px-2 py-4 text-right whitespace-nowrap">Precio bonificado</th>
                 @endunless
-                <th class="px-3 py-4 text-right whitespace-nowrap">Precio venta</th>
-                <th class="px-3 py-4 text-center">Stock</th>
-                <th class="w-[76px] px-3 py-4 text-center"><span class="sr-only">Acciones</span></th>
+                <th class="px-2 py-4 text-right whitespace-nowrap">Precio venta</th>
+                <th class="w-[48px] px-1 py-4 text-center">Stock</th>
+                <th class="w-[62px] px-2 py-4 text-center"><span class="sr-only">Acciones</span></th>
             </tr>
         </thead>
         <tbody>

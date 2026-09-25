@@ -16,13 +16,13 @@ use Illuminate\Support\Facades\Auth;
  */
 class IngresoController extends Controller
 {
+    /**
+     * El sitio no tiene página de login: se entra por el modal del header.
+     * La ruta queda para que los links viejos no den 404.
+     */
     public function formulario()
     {
-        if (Auth::guard('sitio')->check()) {
-            return redirect()->route('productos');
-        }
-
-        return view('auth.ingresar');
+        return redirect()->route('productos');
     }
 
     public function ingresar(Request $request, OdooAuth $auth)
@@ -57,6 +57,7 @@ class IngresoController extends Controller
         Auth::guard('sitio')->logout();
         $request->session()->regenerate();
 
-        return redirect()->route('ingresar');
+        // Se queda en el catálogo: para volver a entrar está el modal del header.
+        return redirect()->route('productos');
     }
 }

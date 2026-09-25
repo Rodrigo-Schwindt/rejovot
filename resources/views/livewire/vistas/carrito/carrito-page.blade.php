@@ -26,8 +26,8 @@
         @if($clienteActivo)
             <p class="anim-entrada mb-4 rounded-[4px] border border-[#002B56] bg-[#002B56]/[.04] px-4 py-3 text-[15px] text-slate-700" style="--retraso: 60">
                 Pedido a nombre de <strong class="text-[#002B56]">{{ $clienteActivo->name }}</strong>
-                @if($clienteActivo->price_discount > 0)
-                    · {{ rtrim(rtrim(number_format((float) $clienteActivo->price_discount, 2, ',', '.'), '0'), ',') }}% de descuento
+                @if($descuentoLista > 0)
+                    · {{ rtrim(rtrim(number_format($descuentoLista, 2, ',', '.'), '0'), ',') }}% de descuento
                 @endif
             </p>
         @else

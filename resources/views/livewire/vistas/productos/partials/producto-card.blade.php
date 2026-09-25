@@ -28,7 +28,8 @@
      class="anim-entrada relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[6px] border bg-white transition {{ $activo ? 'border-[#002B56] shadow-[0_6px_18px_rgba(13,43,94,.18)]' : 'border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,.06)] hover:shadow-[0_6px_18px_rgba(13,43,94,.12)]' }}">
 
     @if(! empty($producto['oferta']))
-        <span class="absolute left-0 top-0 rounded-br-[6px] bg-[#002B56] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white">
+        {{-- z-10: la imagen viene después en el DOM y si no la tapa. --}}
+        <span class="absolute left-0 top-0 z-10 rounded-br-[6px] bg-[#002B56] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white">
             Oferta
         </span>
     @endif
@@ -65,7 +66,7 @@
                 </div>
                 @unless($mostrador)
                     <div class="flex items-baseline justify-between gap-3">
-                        <dt>Precio con descuento</dt>
+                        <dt>Precio bonificado</dt>
                         <dd class="font-semibold">{{ Precio::ar($producto['costo']) }}</dd>
                     </div>
                 @endunless

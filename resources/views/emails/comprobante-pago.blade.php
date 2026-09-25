@@ -43,5 +43,5 @@
 
 <p style="font-family: Arial, sans-serif; font-size: 14px;">
     El comprobante va adjunto y queda cargado en
-    <a href="{{ route('admin.pagos.comprobantes.index') }}" style="color: #002B56;">Cuenta corriente</a>.
+    <a href="{{ route('admin.pagos.comprobantes.index') }}" style="color: #002B56;">Info de pagos</a>.
 </p>

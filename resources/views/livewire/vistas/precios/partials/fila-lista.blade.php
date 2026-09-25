@@ -32,7 +32,7 @@
             @if($lista->puede_verse)
                 <a href="{{ route('precios.ver', $lista) }}" target="_blank" rel="noopener"
                    class="inline-flex h-[44px] items-center gap-2 rounded-[4px] bg-[#002B56] px-6 text-[14px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]">
-                    Ver detalle
+                    Ver online PDF
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                 </a>
             @else
@@ -45,9 +45,10 @@
                 </button>
             @endif
 
+            {{-- El botón dice qué formato se baja: la lista generada es CSV. --}}
             <a href="{{ route('precios.descargar', $lista) }}"
                class="inline-flex h-[44px] items-center rounded-[4px] border border-[#002B56] px-6 text-[14px] font-bold uppercase tracking-wide text-[#002B56] transition hover:bg-[#002B56] hover:text-white">
-                Descargar
+                Descargar {{ $lista->formato === 'excel' ? 'Excel' : strtoupper($lista->formato) }}
             </a>
         </div>
     </td>

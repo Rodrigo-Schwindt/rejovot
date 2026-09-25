@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
             'viewer.readonly' => \App\Http\Middleware\ViewerReadonly::class,
         ]);
+
+        // El sitio no tiene página de login: se vuelve al catálogo con el modal abierto.
+        $middleware->redirectGuestsTo(fn () => route('productos', ['ingresar' => 1]));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

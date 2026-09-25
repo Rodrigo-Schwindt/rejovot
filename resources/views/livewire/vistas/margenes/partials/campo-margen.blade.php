@@ -14,7 +14,7 @@
     <div class="mt-auto flex h-[52px] w-full max-w-[270px] overflow-hidden max-sm:max-w-none rounded-[4px] border border-slate-200 bg-white focus-within:border-[#002B56] rj-transicion-carga"
          wire:loading.class="opacity-60" wire:target="{{ $modelo }}">
         <input id="{{ $id }}" type="number" min="0" max="1000" step="0.1"
-               wire:model.blur="{{ $modelo }}"
+               wire:model.live.blur="{{ $modelo }}"
                class="h-full w-full px-3 text-[16px] text-slate-800 outline-none">
         <span class="flex h-full w-[46px] shrink-0 items-center justify-center border-l border-slate-200 text-[16px] text-slate-600">
             <span wire:loading.remove wire:target="{{ $modelo }}">%</span>

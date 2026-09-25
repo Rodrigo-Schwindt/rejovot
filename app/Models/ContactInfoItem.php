@@ -29,6 +29,18 @@ class ContactInfoItem extends Model
         'email'             => 'Email',
     ];
 
+    /**
+     * Hay uno solo de cada uno y no se pueden borrar: el WhatsApp flotante es
+     * el botón del sitio y al email llegan los avisos de las ventas.
+     */
+    public const TIPOS_FIJOS = ['whatsapp_flotante', 'email'];
+
+    /** Los que se pueden sumar como dato nuevo. */
+    public static function tiposAgregables(): array
+    {
+        return array_diff_key(self::TYPES, array_flip(self::TIPOS_FIJOS));
+    }
+
     public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class);

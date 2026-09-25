@@ -54,7 +54,7 @@
     </form>
 
     <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-sm">
-        <table class="w-full min-w-[760px] text-sm text-slate-700">
+        <table class="admin-mobile-table w-full min-w-[760px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
                     <th class="px-4 py-3 text-left">Descripción</th>
@@ -68,7 +68,7 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($listas as $lista)
                     <tr class="transition hover:bg-slate-50/60">
-                        <td class="px-4 py-3 font-medium text-slate-800">
+                        <td data-label="Descripción" class="px-4 py-3 font-medium text-slate-800">
                             {{ $lista->descripcion }}
                             @if($lista->es_automatica)
                                 <span class="ml-1 inline-flex items-center rounded bg-blue-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-[#002B56]">
@@ -77,15 +77,15 @@
                             @endif
                             <span class="block text-xs text-slate-400">{{ $lista->archivo_original }}</span>
                         </td>
-                        <td class="px-4 py-3 text-center">{{ $lista->formato_nombre }}</td>
-                        <td class="px-4 py-3 text-center text-slate-500">{{ $lista->tamano_legible }}</td>
-                        <td class="px-4 py-3 text-slate-500">{{ $lista->vigencia ?: '—' }}</td>
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Formato" class="px-4 py-3 text-center">{{ $lista->formato_nombre }}</td>
+                        <td data-label="Peso" class="px-4 py-3 text-center text-slate-500">{{ $lista->tamano_legible }}</td>
+                        <td data-label="Vigencia" class="px-4 py-3 text-slate-500">{{ $lista->vigencia ?: '—' }}</td>
+                        <td data-label="Estado" class="px-4 py-3 text-center">
                             <span class="inline-flex rounded px-2 py-0.5 text-xs font-medium {{ $lista->publicada ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600' }}">
                                 {{ $lista->publicada ? 'Publicada' : 'Oculta' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td data-label="Acciones" class="px-4 py-3">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('precios.descargar', $lista) }}" class="tbl-edit" title="Descargar">
                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>

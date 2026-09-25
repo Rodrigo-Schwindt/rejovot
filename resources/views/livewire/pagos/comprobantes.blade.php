@@ -6,7 +6,7 @@
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h2 class="text-xl font-semibold text-slate-800">
-                Cuenta corriente
+                Info de pagos
                 <span class="text-base font-normal text-slate-400">({{ $comprobantes->total() }})</span>
             </h2>
             <p class="mt-1 text-sm text-slate-500">
@@ -17,7 +17,7 @@
                 @endif
             </p>
         </div>
-        <div class="flex gap-2 text-xs">
+        <div class="flex flex-wrap gap-2 text-xs">
             <a href="{{ route('admin.pagos.comprobantes.index') }}"
                class="inline-flex items-center rounded px-2 py-1 font-medium {{ $estado === '' ? 'bg-[#002B56] text-white' : 'bg-slate-100 text-slate-600' }}">Todos</a>
             <a href="{{ route('admin.pagos.comprobantes.index', ['estado' => 'pendiente']) }}"
@@ -27,9 +27,37 @@
         </div>
     </div>
 
+    {{-- A dónde se avisa cada comprobante que carga un cliente. --}}
+    <form method="POST" action="{{ route('admin.pagos.comprobantes.mail') }}"
+          class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+        @csrf
+        <span class="sec-label">Aviso por mail</span>
+        <p class="mt-2 text-sm text-slate-500">
+            Cada vez que un cliente carga un comprobante desde Info de pagos se manda un mail con el
+            archivo adjunto a esta casilla, además de quedar en la lista de abajo.
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-end gap-3">
+            <div class="w-full min-w-0 flex-1 sm:min-w-[280px]">
+                <label class="f-label" for="mail_comprobantes">Casilla que recibe los comprobantes</label>
+                <input type="email" id="mail_comprobantes" name="mail_comprobantes" class="f-input"
+                       value="{{ old('mail_comprobantes', $contacto?->mail_comprobantes) }}"
+                       placeholder="{{ $contacto?->mail_adm ?: 'ventas@rejovot.com.ar' }}">
+                @error('mail_comprobantes')<p class="mt-1 text-xs text-[#E11A22]">{{ $message }}</p>@enderror
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+
+        @unless($contacto?->mail_comprobantes)
+            <p class="mt-2 text-xs text-slate-400">
+                Vacío: hoy los avisos van al mail de contacto ({{ $contacto?->mail_adm ?: 'sin cargar' }}).
+            </p>
+        @endunless
+    </form>
+
     <form method="GET" action="{{ route('admin.pagos.comprobantes.index') }}" class="flex flex-wrap items-end gap-3">
         @if($estado !== '')<input type="hidden" name="estado" value="{{ $estado }}">@endif
-        <div class="min-w-[260px] flex-1">
+        <div class="w-full min-w-0 flex-1 sm:min-w-[260px]">
             <label class="f-label" for="q">Buscar</label>
             <input type="text" id="q" name="q" value="{{ $buscar }}" class="f-input"
                    placeholder="Cliente, banco o número de factura">
@@ -44,7 +72,7 @@
     @if(session('error'))<div class="alert-error">{{ session('error') }}</div>@endif
 
     <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-sm">
-        <table class="w-full min-w-[900px] text-sm text-slate-700">
+        <table class="admin-mobile-table w-full min-w-[900px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
                     <th class="px-4 py-3 text-left">Cliente</th>
@@ -60,7 +88,7 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($comprobantes as $comprobante)
                     <tr class="transition hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
+                        <td data-label="Cliente" class="px-4 py-3">
                             @if($comprobante->customer)
                                 <span class="font-medium text-slate-800">{{ $comprobante->customer->name }}</span>
                                 @if($comprobante->user?->esVendedor())
@@ -70,20 +98,20 @@
                                 <span class="text-xs text-slate-400">Sin identificar</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-xs text-slate-400">{{ $comprobante->created_at?->format('d/m/Y H:i') }}</td>
-                        <td class="px-4 py-3">{{ $comprobante->fecha?->format('d/m/Y') }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-slate-800">{{ \App\Support\Precio::ar($comprobante->importe) }}</td>
-                        <td class="px-4 py-3">
+                        <td data-label="Enviado" class="px-4 py-3 text-xs text-slate-400">{{ $comprobante->created_at?->format('d/m/Y H:i') }}</td>
+                        <td data-label="Fecha de pago" class="px-4 py-3">{{ $comprobante->fecha?->format('d/m/Y') }}</td>
+                        <td data-label="Importe" class="px-4 py-3 text-right font-medium text-slate-800">{{ \App\Support\Precio::ar($comprobante->importe) }}</td>
+                        <td data-label="Banco / Sucursal" class="px-4 py-3">
                             {{ $comprobante->banco }}
                             <span class="block text-xs text-slate-400">Sucursal {{ $comprobante->sucursal }}</span>
                         </td>
-                        <td class="px-4 py-3 text-slate-500">{{ $comprobante->facturas_canceladas ?: '—' }}</td>
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Facturas" class="px-4 py-3 text-slate-500">{{ $comprobante->facturas_canceladas ?: '—' }}</td>
+                        <td data-label="Estado" class="px-4 py-3 text-center">
                             <span class="inline-flex rounded px-2 py-0.5 text-xs font-medium {{ $comprobante->procesado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
                                 {{ $comprobante->procesado ? 'Procesado' : 'Pendiente' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td data-label="Acciones" class="px-4 py-3">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('admin.pagos.comprobantes.download', $comprobante) }}" class="tbl-edit" title="Descargar comprobante">
                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
@@ -107,7 +135,7 @@
                     </tr>
 
                     @if($comprobante->observaciones)
-                        <tr class="bg-slate-50/40">
+                        <tr class="admin-table-note bg-slate-50/40">
                             <td colspan="8" class="px-4 pb-3 text-xs text-slate-500">
                                 <b>Observaciones:</b> {{ $comprobante->observaciones }}
                             </td>

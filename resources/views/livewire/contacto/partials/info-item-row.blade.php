@@ -22,8 +22,9 @@
                 {{ \App\Models\ContactInfoItem::TYPES[$type] ?? $type }}
             </div>
         @else
+            {{-- Sin los fijos: hay uno solo de cada uno y ya está más arriba. --}}
             <select name="ci_type[]" class="f-input">
-                @foreach(\App\Models\ContactInfoItem::TYPES as $tvalue => $tlabel)
+                @foreach(\App\Models\ContactInfoItem::tiposAgregables() as $tvalue => $tlabel)
                     <option value="{{ $tvalue }}" @selected($type === $tvalue)>{{ $tlabel }}</option>
                 @endforeach
             </select>
@@ -37,7 +38,9 @@
 
     <div class="flex items-end">
         @if($fixed)
-            <span class="py-2 text-xs italic text-slate-400">Fijo (no se puede eliminar)</span>
+            <span class="py-2 text-xs italic text-slate-400">
+                {{ $type === 'email' ? 'Fijo: acá llegan los avisos de ventas' : 'Fijo (no se puede eliminar)' }}
+            </span>
         @else
             <button type="button" class="btn btn-danger btn-sm remove-info-item">Eliminar</button>
         @endif

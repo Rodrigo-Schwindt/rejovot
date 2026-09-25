@@ -14,16 +14,24 @@
         <section class="mb-12">
             <h1 class="anim-entrada mb-7 text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]" style="--retraso: 40">Márgenes sobre lista de precios</h1>
 
-            <div class="anim-entrada" style="--retraso: 100">
+            <div class="anim-entrada grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:max-w-[620px]" style="--retraso: 100">
                 @include('livewire.vistas.margenes.partials.campo-margen', [
                     'id' => 'margen-general',
                     'modelo' => 'general',
                     'etiqueta' => 'Márgen sobre lista de precios',
                 ])
+
+                @include('livewire.vistas.margenes.partials.campo-margen', [
+                    'id' => 'descuento-general',
+                    'modelo' => 'descuento',
+                    'etiqueta' => 'Descuento sobre lista de precios',
+                ])
             </div>
 
             <p class="anim-entrada mt-3 max-w-[560px] text-[14px] text-slate-500" style="--retraso: 140">
-                Es el margen que se aplica cuando la marca o la familia del producto no tienen uno propio.
+                El <strong>descuento</strong> es lo que separa «Lista» de «Tu precio» en el catálogo.
+                El <strong>margen</strong> se aplica sobre ese precio cuando la marca o la familia del
+                producto no tienen uno propio.
             </p>
         </section>
 

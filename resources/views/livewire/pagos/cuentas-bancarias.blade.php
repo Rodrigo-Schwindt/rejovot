@@ -15,7 +15,7 @@
         @csrf
 
         <div class="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <span class="sec-label">Cuentas</span>
                 <button type="button" id="add-cuenta" class="btn btn-primary btn-sm">+ Añadir cuenta</button>
             </div>

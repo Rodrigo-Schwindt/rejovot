@@ -113,6 +113,7 @@ class CarritoPage extends Component
 
         return view('livewire.vistas.carrito.carrito-page', [
             'clienteActivo' => app(ClienteActivo::class)->actual(),
+            'descuentoLista' => app(\App\Services\Margenes\Margenes::class)->descuento(),
             'motivoBloqueo' => app(ClienteActivo::class)->motivo(),
             'items' => $carrito->items(),
             'sinStock' => count($carrito->itemsSinStock()),

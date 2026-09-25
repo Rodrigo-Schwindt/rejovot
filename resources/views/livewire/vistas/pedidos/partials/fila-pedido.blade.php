@@ -1,17 +1,27 @@
 @php
     use App\Support\Precio;
 
+    // Del más avanzado al menos: facturado, enviado, pendiente.
     $estadoClase = match ($pedido['estado']) {
-        'entregado' => 'text-[#1E9E3E]',
+        'facturado' => 'text-[#1E9E3E]',
+        'enviado' => 'text-[#002B56]',
         'cancelado' => 'text-slate-500',
         'revision' => 'text-amber-600',
         default => 'text-[#E11A22]',
     };
     $estadoTexto = match ($pedido['estado']) {
-        'entregado' => 'Entregado',
+        'facturado' => 'Facturado',
+        'enviado' => 'Enviado',
         'cancelado' => 'Cancelado',
         'revision' => 'En revisión',
         default => 'Pendiente',
+    };
+    $estadoAyuda = match ($pedido['estado']) {
+        'facturado' => 'Ya se facturó. El comprobante está en Estado de la Cuenta.',
+        'enviado' => 'Salió del depósito. Todavía no se facturó.',
+        'cancelado' => 'El pedido se anuló.',
+        'revision' => 'Lo cargaste desde la web y Rejovot todavía no lo confirmó.',
+        default => 'Confirmado, en preparación.',
     };
     $abiertoAca = $abierto === $pedido['numero'];
     // Entrada escalonada: cada fila aparece un poco después que la anterior.
@@ -34,7 +44,7 @@
 
     <td class="px-4 py-4 text-[15px] text-slate-700 whitespace-nowrap">{{ Precio::ar($pedido['importe']) }}</td>
 
-    <td class="px-4 py-4 text-[15px] font-medium {{ $estadoClase }}">{{ $estadoTexto }}</td>
+    <td class="px-4 py-4 text-[15px] font-medium {{ $estadoClase }}" title="{{ $estadoAyuda }}">{{ $estadoTexto }}</td>
 
     <td class=" py-4">
         <div class="flex flex-wrap items-center justify-end gap-3">

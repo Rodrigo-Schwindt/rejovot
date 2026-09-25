@@ -21,6 +21,7 @@ class Product extends Model
         'category_id',
         'brand_id',
         'list_price',
+        'tax_percent',
         'stock',
         'active',
         'published',
@@ -36,6 +37,7 @@ class Product extends Model
     {
         return [
             'list_price' => 'decimal:2',
+            'tax_percent' => 'float',
             'stock' => 'decimal:2',
             'active' => 'boolean',
             'published' => 'boolean',

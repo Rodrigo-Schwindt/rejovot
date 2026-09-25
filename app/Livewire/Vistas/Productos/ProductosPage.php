@@ -184,18 +184,13 @@ class ProductosPage extends Component
 
         $clienteElegido = app(ClienteActivo::class)->actual();
 
-        // Con cliente elegido, "Tu precio" es la lista menos su descuento.
-        if ($clienteElegido) {
-            $productos = array_map(fn (array $p) => $this->conDescuento($p, $clienteElegido, $margenes), $productos);
-            $detalle = $detalle ? $this->conDescuento($detalle, $clienteElegido, $margenes) : null;
-        }
-
         return view('livewire.vistas.productos.productos-page', [
             'productos' => $productos,
             'paginador' => $paginador,
             'detalle' => $detalle,
             'ofertas' => $catalogo->ofertas(),
             'clienteElegido' => $clienteElegido,
+            'descuentoLista' => $margenes->descuento(),
             'clientes' => $this->buscarClientes(),
             'puedeElegirCliente' => app(ClienteActivo::class)->puedeElegir(),
             'totalCartera' => auth('sitio')->user()?->esVendedor() ? $this->cartera()->count() : 0,
@@ -229,13 +224,5 @@ class ProductosPage extends Component
         return Customer::with('salesperson')
             ->where('active', true)
             ->where('salesperson_id', auth('sitio')->user()?->salesperson_id);
-    }
-
-    /** Aplica el descuento del cliente y recalcula su precio de venta. */
-    private function conDescuento(array $producto, Customer $cliente, Margenes $margenes): array
-    {
-        $producto['costo'] = $cliente->precioNeto((float) $producto['lista']);
-
-        return $margenes->aplicar($producto);
     }
 }

@@ -42,7 +42,7 @@
     </form>
 
     <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-sm">
-        <table class="w-full min-w-[640px] text-sm text-slate-700">
+        <table class="admin-mobile-table w-full min-w-[640px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
                     <th class="px-4 py-3 text-left">Sección</th>
@@ -54,13 +54,13 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($items as $item)
                     <tr class="transition hover:bg-slate-50/60">
-                        <td class="px-4 py-3 font-medium text-slate-800">
+                        <td data-label="Sección" class="px-4 py-3 font-medium text-slate-800">
                             {{ \App\Models\Metadata::SECTIONS[$item->section] ?? $item->section }}
                             <span class="block text-xs text-slate-400">{{ $item->section }}</span>
                         </td>
-                        <td class="px-4 py-3 text-slate-500">{{ $item->keywords ?: '—' }}</td>
-                        <td class="px-4 py-3 text-slate-500">{{ \Illuminate\Support\Str::limit($item->description, 90) ?: '—' }}</td>
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Keywords" class="px-4 py-3 text-slate-500">{{ $item->keywords ?: '—' }}</td>
+                        <td data-label="Descripción" class="px-4 py-3 text-slate-500">{{ \Illuminate\Support\Str::limit($item->description, 90) ?: '—' }}</td>
+                        <td data-label="Acciones" class="px-4 py-3 text-center">
                             <form method="POST" action="{{ route('admin.metadata.delete', $item) }}" onsubmit="return confirm('¿Eliminar esta metadata?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="tbl-del cursor-pointer" title="Eliminar">

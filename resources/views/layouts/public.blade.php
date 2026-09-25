@@ -41,16 +41,21 @@
         $wssp = $wsspItem->value ?? $contactData?->wssp;
         // En el detalle de un producto queda activa la sección desde la que se llegó.
         $desdeVehiculos = request()->routeIs('producto') && request('desde') === 'vehiculos';
+        // Estas secciones no tienen sentido sin sesión: se ven apagadas y no navegan.
+        $soloConSesion = ! auth('sitio')->check();
+
         $navItems = [
             ['label' => 'Productos', 'route' => 'productos', 'activo' => request()->routeIs('producto') && ! $desdeVehiculos],
             ['label' => 'Búsqueda por vehículo', 'route' => 'vehiculos', 'activo' => $desdeVehiculos],
-            ['label' => 'Carrito', 'route' => 'carrito'],
-            ['label' => 'Mis Pedidos', 'route' => 'pedidos'],
+            ['label' => 'Carrito', 'route' => 'carrito', 'privada' => true],
+            ['label' => 'Mis Pedidos', 'route' => 'pedidos', 'privada' => true],
             ['label' => 'Lista de precios', 'route' => 'precios'],
-            ['label' => 'Estado de la Cuenta', 'route' => 'cuenta'],
-            ['label' => 'Info de Pagos', 'route' => 'pagos'],
+            ['label' => 'Estado de la Cuenta', 'route' => 'cuenta', 'privada' => true],
+            ['label' => 'Info de Pagos', 'route' => 'pagos', 'privada' => true],
             ['label' => 'Márgenes', 'route' => 'margenes'],
         ];
+
+        $bloqueada = fn (array $item) => ($item['privada'] ?? false) && $soloConSesion;
     @endphp
 
     @include('partials.site-toast')
@@ -70,11 +75,20 @@
             <nav class="hidden min-w-0 items-center gap-[18px] xl:flex">
                 @foreach($navItems as $item)
                     @php $activo = ($item['activo'] ?? false) || ($item['route'] && request()->routeIs($item['route'])); @endphp
-                    <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
-                       @if($item['route']) wire:navigate @endif
-                       class="nav-link shrink-0 text-[15px] leading-none text-[#101828] {{ $activo ? 'active text-[#002B56]' : '' }}">
-                        {{ $item['label'] }}
-                    </a>
+
+                    @if($bloqueada($item))
+                        <button type="button" x-data @click="$dispatch('abrir-login')"
+                                title="Ingresá con tu usuario para ver {{ $item['label'] }}"
+                                class="shrink-0 cursor-pointer text-[15px] leading-none text-slate-400">
+                            {{ $item['label'] }}
+                        </button>
+                    @else
+                        <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
+                           @if($item['route']) wire:navigate @endif
+                           class="nav-link shrink-0 text-[15px] leading-none text-[#101828] {{ $activo ? 'active text-[#002B56]' : '' }}">
+                            {{ $item['label'] }}
+                        </a>
+                    @endif
                 @endforeach
 
                 @auth('sitio')
@@ -94,7 +108,11 @@
                                 <span class="mt-0.5 block">{{ auth('sitio')->user()->esVendedor() ? 'Vendedor' : 'Cliente' }}</span>
                                 <span class="block truncate text-slate-700">{{ auth('sitio')->user()->email }}</span>
                             </p>
-                            <form method="POST" action="{{ route('salir') }}">
+                            <a wire:navigate href="{{ route('reclamos') }}"
+                               class="block px-4 py-2.5 text-[14px] text-slate-700 transition hover:bg-slate-50 {{ request()->routeIs('reclamos*') ? 'font-semibold text-[#002B56]' : '' }}">
+                                Reclamos
+                            </a>
+                            <form method="POST" action="{{ route('salir') }}" class="border-t border-slate-100">
                                 @csrf
                                 <button type="submit" class="w-full cursor-pointer px-4 py-2.5 text-left text-[14px] text-slate-700 transition hover:bg-slate-50">
                                     Cerrar sesión
@@ -105,8 +123,11 @@
                 @else
                     {{-- Ingreso de clientes / vendedores: modal desplegable debajo del botón --}}
                     <div class="relative ml-1 shrink-0"
-                         x-data="{ abierto: {{ $errors->has('login') || $errors->has('password') ? 'true' : 'false' }} }"
-                         @click.outside="abierto = false" @keydown.escape.window="abierto = false">
+                         x-data="{ abierto: {{ $errors->has('login') || $errors->has('password') || request()->boolean('ingresar') ? 'true' : 'false' }} }"
+                         @click.outside="abierto = false" @keydown.escape.window="abierto = false"
+                         {{-- setTimeout: el mismo click que abre el modal dispara el click.outside,
+                              así que se abre recién cuando ese click terminó de propagarse. --}}
+                         @abrir-login.window="setTimeout(() => { abierto = true; $nextTick(() => $refs.login?.focus()) })">
                         <button type="button" @click="abierto = !abierto; $nextTick(() => abierto && $refs.login.focus())"
                                 class="inline-flex h-[42px] cursor-pointer items-center whitespace-nowrap rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]"
                                 :aria-expanded="abierto">

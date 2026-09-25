@@ -92,7 +92,7 @@ class InfoPagosPage extends Component
      */
     protected function avisarPorMail(PaymentReceipt $comprobante): void
     {
-        $destino = Contact::first()?->mail_adm;
+        $destino = Contact::mailComprobantes();
 
         if (! $destino) {
             return;

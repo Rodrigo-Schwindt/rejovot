@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Pagos;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\PaymentReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Cuenta corriente: los comprobantes de pago que cargan los clientes desde
+ * Info de pagos: los comprobantes de pago que cargan los clientes desde
  * Info de pagos. No vienen de Odoo; el pago se imputa allá a mano.
  */
 class ComprobantesController extends Controller
@@ -37,7 +38,26 @@ class ComprobantesController extends Controller
             'totalPendientes' => PaymentReceipt::where('estado', 'pendiente')->count(),
             'totalProcesados' => PaymentReceipt::where('estado', 'procesado')->count(),
             'importePendiente' => (float) PaymentReceipt::where('estado', 'pendiente')->sum('importe'),
+            'contacto' => Contact::first(),
         ]);
+    }
+
+    /** Casilla a la que se avisa cada vez que un cliente carga un comprobante. */
+    public function guardarMail(Request $request)
+    {
+        $datos = $request->validate([
+            'mail_comprobantes' => ['nullable', 'email', 'max:255'],
+        ], [
+            'mail_comprobantes.email' => 'Escribí una dirección de correo válida.',
+        ]);
+
+        $contacto = Contact::first() ?? new Contact;
+        $contacto->mail_comprobantes = $datos['mail_comprobantes'] ?: null;
+        $contacto->save();
+
+        return back()->with('success', $contacto->mail_comprobantes
+            ? "Los comprobantes se van a avisar a {$contacto->mail_comprobantes}."
+            : 'Sin casilla propia: los comprobantes se avisan al mail de contacto.');
     }
 
     public function download(PaymentReceipt $comprobante)

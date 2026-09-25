@@ -21,6 +21,8 @@ class OdooPedidos
         'amount_tax',
         'amount_total',
         'state',
+        // Nada que facturar / por facturar / facturado.
+        'invoice_status',
         'carrier_id',
         'client_order_ref',
         'order_line',

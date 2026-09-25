@@ -125,6 +125,7 @@ class SyncOdooCatalog extends Command
                         'category_id' => $categorias[$categoriaOdoo] ?? null,
                         // lst_price_with_margin ya es el precio de la tarifa pública.
                         'list_price' => $row['lst_price_with_margin'] ?? 0,
+                        'tax_percent' => $this->iva($row['taxes_id'] ?? []),
                         'stock' => $row['qty_available'] ?? 0,
                         'active' => (bool) $row['active'],
                         'published' => (bool) $row['website_published'],
@@ -136,6 +137,36 @@ class SyncOdooCatalog extends Command
                 }
             }
         });
+    }
+
+    /**
+     * IVA del producto. Los impuestos son varios (IVA y percepciones); las
+     * percepciones están en 0, así que sumar los porcentuales da el IVA.
+     */
+    protected function iva(array $taxIds): float
+    {
+        $tasas = $this->tasas();
+        $total = 0.0;
+
+        foreach ($taxIds as $id) {
+            $total += $tasas[$id] ?? 0;
+        }
+
+        return $total > 0 ? $total : 21.0;
+    }
+
+    /** @return array<int, float> id de impuesto => porcentaje */
+    protected function tasas(): array
+    {
+        static $tasas = null;
+
+        if ($tasas !== null) {
+            return $tasas;
+        }
+
+        $rows = app(OdooCatalog::class)->impuestosDeVenta();
+
+        return $tasas = collect($rows)->pluck('amount', 'id')->map(fn ($v) => (float) $v)->all();
     }
 
     /** Recorta un valor de Odoo al largo que soporta la columna. */

@@ -41,7 +41,8 @@
                     </div>
 
                     <label class="flex cursor-pointer items-center gap-3 text-[14px] text-slate-700">
-                        <span class="relative inline-flex h-[22px] w-[42px] shrink-0 items-center rounded-full bg-[#002B56]">
+                        {{-- Gris apagado; se pinta de azul recién cuando la vista mostrador está activa. --}}
+                        <span class="relative inline-flex h-[22px] w-[42px] shrink-0 items-center rounded-full transition-colors duration-300 {{ $mostrador ? 'bg-[#002B56]' : 'bg-slate-300' }}">
                             <input type="checkbox" wire:model.live="mostrador" class="peer sr-only">
                             <span class="absolute left-[3px] h-[16px] w-[16px] rounded-full bg-white transition-transform duration-300 ease-out {{ $mostrador ? 'translate-x-[20px]' : '' }}"></span>
                         </span>

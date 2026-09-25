@@ -93,7 +93,7 @@
                 </select>
             </div>
 
-            <div class="flex items-end gap-5">
+            <div class="flex flex-wrap items-end gap-5">
                 <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
                     <input type="checkbox" name="oferta" value="1" @checked($filtros['oferta'])
                            class="h-4 w-4 rounded border-slate-300 accent-[#E11A22]">
@@ -115,7 +115,7 @@
 
     {{-- Listado --}}
     <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-sm">
-        <table class="w-full min-w-[900px] text-sm text-slate-700">
+        <table class="admin-mobile-table w-full min-w-[900px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
                     <th class="w-[70px] px-4 py-3"><span class="sr-only">Imagen</span></th>
@@ -130,13 +130,13 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($productos as $producto)
                     <tr class="transition hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
+                        <td data-label="Imagen" class="px-4 py-3">
                             <img src="{{ $producto->imagen_url }}" alt="" loading="lazy"
                                  class="h-11 w-11 rounded border border-slate-100 object-contain"
                                  onerror="this.style.visibility='hidden'">
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td data-label="Producto" class="px-4 py-3">
                             <span class="font-medium text-[#2563C9]">{{ $producto->code ?: '—' }}</span>
                             <span class="block max-w-[380px] text-xs text-slate-600">{{ Str::limit($producto->name, 80) }}</span>
                             @if($producto->en_oferta)
@@ -147,16 +147,16 @@
                             @endif
                         </td>
 
-                        <td class="px-4 py-3 text-xs text-slate-500">
+                        <td data-label="Marca / Rubro" class="px-4 py-3 text-xs text-slate-500">
                             {{ $producto->brand?->name ?: '—' }}
                             <span class="block">{{ $producto->category?->name ?: '—' }}</span>
                         </td>
 
-                        <td class="px-4 py-3 text-right font-medium text-slate-800">
+                        <td data-label="Precio lista" class="px-4 py-3 text-right font-medium text-slate-800">
                             {{ \App\Support\Precio::ar($producto->list_price) }}
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Stock" class="px-4 py-3 text-center">
                             @php
                                 $color = match ($producto->semaforo) {
                                     'verde' => 'bg-[#2FBF4B]',
@@ -168,7 +168,7 @@
                             <span class="mt-1 block text-[11px] text-slate-400">{{ (float) $producto->stock }}</span>
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Estado" class="px-4 py-3 text-center">
                             @if(! $producto->active)
                                 <span class="inline-flex rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">Archivado</span>
                             @elseif(! $producto->published)
@@ -183,7 +183,7 @@
                             @endif
                         </td>
 
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Banner" class="px-4 py-3 text-center">
                             {{-- Al banner sólo puede subir lo que hoy se ve en el sitio. --}}
                             @if($producto->active && $producto->published && ! $producto->oculto)
                                 <form method="POST" action="{{ route('admin.catalogo.destacar', $producto) }}">

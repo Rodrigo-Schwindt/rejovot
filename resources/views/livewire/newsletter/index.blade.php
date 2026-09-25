@@ -59,7 +59,7 @@
     </div>
 
     <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-sm">
-        <table class="w-full min-w-[640px] text-sm text-slate-700">
+        <table class="admin-mobile-table w-full min-w-[640px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
                     <th class="px-4 py-3 text-left">Email</th>
@@ -72,15 +72,15 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($subscribers as $subscriber)
                     <tr class="transition hover:bg-slate-50">
-                        <td class="px-4 py-3 font-medium text-slate-800">{{ $subscriber->email }}</td>
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Email" class="px-4 py-3 font-medium text-slate-800">{{ $subscriber->email }}</td>
+                        <td data-label="Estado" class="px-4 py-3 text-center">
                             <span class="inline-flex rounded px-2 py-0.5 text-xs font-medium {{ $subscriber->active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600' }}">
                                 {{ $subscriber->active ? 'Habilitado' : 'Deshabilitado' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-center text-xs text-slate-400">{{ $subscriber->created_at?->format('d/m/Y') }}</td>
-                        <td class="px-4 py-3 text-center text-xs text-slate-400">{{ $subscriber->last_sent_at?->format('d/m/Y H:i') ?? '—' }}</td>
-                        <td class="px-4 py-3">
+                        <td data-label="Suscripción" class="px-4 py-3 text-center text-xs text-slate-400">{{ $subscriber->created_at?->format('d/m/Y') }}</td>
+                        <td data-label="Último envío" class="px-4 py-3 text-center text-xs text-slate-400">{{ $subscriber->last_sent_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td data-label="Acciones" class="px-4 py-3">
                             <div class="flex items-center justify-center gap-2">
                                 <form method="POST" action="{{ route('admin.newsletter.toggle', $subscriber) }}">
                                     @csrf @method('PATCH')

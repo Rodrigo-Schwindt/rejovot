@@ -10,7 +10,7 @@
             <span class="font-medium text-slate-700">{{ $paginator->total() }}</span>
         </p>
 
-        <div class="flex items-center gap-1.5">
+        <div class="flex max-w-full items-center gap-1.5 overflow-x-auto pb-1">
             @if ($paginator->onFirstPage())
                 <span aria-disabled="true" class="inline-flex h-9 w-9 cursor-default select-none items-center justify-center rounded-lg border border-slate-100 text-slate-300">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>

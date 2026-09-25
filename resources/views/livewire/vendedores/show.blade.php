@@ -32,7 +32,7 @@
     </div>
 
     <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-sm">
-        <table class="w-full min-w-[760px] text-sm text-slate-700">
+        <table class="admin-mobile-table w-full min-w-[760px] text-sm text-slate-700">
             <thead class="border-b border-slate-100 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
                 <tr>
                     <th class="px-4 py-3 text-left">Cliente</th>
@@ -45,21 +45,21 @@
             <tbody class="divide-y divide-slate-50">
                 @forelse($clientes as $cliente)
                     <tr class="transition hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
+                        <td data-label="Cliente" class="px-4 py-3">
                             <a href="{{ route('admin.clientes.show', $cliente) }}" class="font-medium text-[#2563C9] hover:underline">{{ $cliente->name ?: '(sin nombre en Odoo)' }}</a>
                             <span class="block text-xs text-slate-400">{{ $cliente->vat ? 'CUIT ' . $cliente->vat : 'Sin CUIT' }}</span>
                         </td>
-                        <td class="px-4 py-3 text-xs text-slate-500">
+                        <td data-label="Contacto" class="px-4 py-3 text-xs text-slate-500">
                             {{ $cliente->email ?: '—' }}
                             <span class="block">{{ $cliente->phone ?: '' }}{{ $cliente->city ? ' · ' . $cliente->city : '' }}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
+                        <td data-label="Descuento" class="px-4 py-3 text-right">
                             {{ $cliente->price_discount > 0 ? rtrim(rtrim(number_format((float) $cliente->price_discount, 2, ',', '.'), '0'), ',') . '%' : '—' }}
                         </td>
-                        <td class="px-4 py-3 text-right whitespace-nowrap {{ $cliente->credit_limit > 0 && $cliente->credit > $cliente->credit_limit ? 'font-semibold text-[#E11A22]' : '' }}">
+                        <td data-label="Deuda" class="px-4 py-3 text-right whitespace-nowrap {{ $cliente->credit_limit > 0 && $cliente->credit > $cliente->credit_limit ? 'font-semibold text-[#E11A22]' : '' }}">
                             {{ Precio::ar($cliente->credit) }}
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td data-label="Acceso al sitio" class="px-4 py-3 text-center">
                             <span class="inline-flex rounded px-2 py-0.5 text-xs {{ $cliente->has_portal ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500' }}">
                                 {{ $cliente->has_portal ? 'Puede entrar' : 'Sin usuario' }}
                             </span>

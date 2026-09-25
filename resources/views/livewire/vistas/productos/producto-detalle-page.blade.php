@@ -152,7 +152,7 @@
                         <dd class="font-semibold text-[#111]">{{ Precio::ar($producto['lista']) }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-4">
-                        <dt class="font-semibold text-[#111]">Tu precio</dt>
+                        <dt class="font-semibold text-[#111]">Precio bonificado</dt>
                         <dd class="font-semibold text-[#111]">{{ Precio::ar($producto['costo']) }}</dd>
                     </div>
                     <div class="flex items-center justify-between gap-4">

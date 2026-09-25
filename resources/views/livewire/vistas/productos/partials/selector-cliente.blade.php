@@ -16,8 +16,9 @@
                     <p class="truncate text-[15px] font-semibold text-slate-800">{{ $clienteElegido->name }}</p>
                     <p class="mt-0.5 text-[13px] text-slate-500">
                         @if($clienteElegido->vat) CUIT {{ $clienteElegido->vat }} @endif
-                        @if($clienteElegido->price_discount > 0)
-                            · <span class="font-semibold text-[#002B56]">{{ rtrim(rtrim(number_format((float) $clienteElegido->price_discount, 2, ',', '.'), '0'), ',') }}% de descuento</span>
+                        @if($descuentoLista > 0)
+                            {{-- El descuento sale de Márgenes, no del que tiene cargado en Odoo. --}}
+                            · <span class="font-semibold text-[#002B56]">{{ rtrim(rtrim(number_format($descuentoLista, 2, ',', '.'), '0'), ',') }}% de descuento</span>
                         @endif
                         @if($clienteElegido->salesperson) · {{ $clienteElegido->salesperson->name }} @endif
                     </p>
@@ -77,7 +78,6 @@
                                     <span class="block truncate text-[14px] text-slate-800">{{ $cliente->name }}</span>
                                     <span class="block text-[12px] text-slate-400">
                                         @if($cliente->vat) CUIT {{ $cliente->vat }} @endif
-                                        @if($cliente->price_discount > 0) · {{ rtrim(rtrim(number_format((float) $cliente->price_discount, 2, ',', '.'), '0'), ',') }}% @endif
                                     </span>
                                 </button>
                             </li>
@@ -99,10 +99,11 @@
             {{-- Visitante: puede mirar, no operar --}}
             <div class="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-slate-300 bg-slate-50 px-2 py-1">
                 <p class="text-[14px] text-slate-600">Estás viendo precios de lista.</p>
-                <a href="{{ route('ingresar') }}"
-                   class="inline-flex h-[42px] items-center rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold  tracking-wide text-white transition hover:bg-[#0A2249] max-sm:w-full max-sm:justify-center">
+                {{-- Abre el modal del header: no hay página de login del sitio. --}}
+                <button type="button" x-data @click="$dispatch('abrir-login')"
+                        class="inline-flex h-[42px] cursor-pointer items-center rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold tracking-wide text-white transition hover:bg-[#0A2249] max-sm:w-full max-sm:justify-center">
                     Ingresar
-                </a>
+                </button>
             </div>
         @endif
     </div>

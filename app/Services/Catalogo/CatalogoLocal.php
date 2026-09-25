@@ -260,6 +260,8 @@ class CatalogoLocal implements CatalogoRepository
             'marca' => $p->brand?->name ?? '',
             'rubro' => $p->category?->name ?? '',
             'oem' => $p->oem_codes ?? '',
+            // IVA del producto en Odoo: la mayoría 21%, los FISPA 10,5%.
+            'iva' => (float) $p->tax_percent,
             // Viene de la búsqueda: si la fila entró por ser alternativo o
             // accesorio de otro producto, acá está de cuál.
             'relacion' => $relacion[0] ?? null,

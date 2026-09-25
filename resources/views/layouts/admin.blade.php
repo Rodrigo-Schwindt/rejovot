@@ -94,7 +94,7 @@
 
         /* ── formularios ── */
         .f-input, .f-select, .f-textarea {
-            width:100%; border:1px solid #e2e8f0; border-radius:.5rem;
+            width:100%; min-width:0; border:1px solid #e2e8f0; border-radius:.5rem;
             padding:.5rem .75rem; font-size:.875rem; background:#fff;
             color:#0f172a; transition:border-color .15s, box-shadow .15s;
         }
@@ -105,6 +105,8 @@
         .f-label { display:block; font-size:.875rem; font-weight:500; color:#374151; margin-bottom:.35rem; }
         .f-hint { font-size:.75rem; color:#94a3b8; margin-top:.35rem; }
         .f-error { font-size:.75rem; color:#dc2626; margin-top:.25rem; }
+        main input[type=file] { max-width:100%; }
+        main dd { min-width:0; overflow-wrap:anywhere; }
 
         .upload-zone {
             border:2px dashed #c7d7ef; border-radius:.75rem;
@@ -127,21 +129,37 @@
         .alert-success { background:#f0fdf4; border:1px solid #bbf7d0; color:#15803d; padding:.75rem 1rem; border-radius:.5rem; font-size:.875rem; }
         .alert-error { background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:.75rem 1rem; border-radius:.5rem; font-size:.875rem; }
 
-        /* Tailwind v4 usa `translate`, no `transform` */
-        #admin-sidebar { translate: -100% 0; }
+        #admin-sidebar { transform:translateX(-100%); }
         @@media (min-width:1024px) {
-            #admin-sidebar { translate: 0 0 !important; display:flex !important; }
+            #admin-sidebar { transform:none !important; display:flex !important; }
             #sidebar-backdrop { display:none !important; }
+        }
+        @@media (max-width:639px) {
+            .admin-mobile-table, .admin-mobile-table tbody, .admin-mobile-table tr, .admin-mobile-table td { display:block; width:100%; }
+            .admin-mobile-table { min-width:0 !important; }
+            .admin-mobile-table thead { display:none; }
+            .admin-mobile-table tbody { padding:.75rem; }
+            .admin-mobile-table tbody tr { margin-bottom:.75rem; overflow:hidden; border:1px solid #e2e8f0; border-radius:.75rem; background:#fff; }
+            .admin-mobile-table tbody tr:last-child { margin-bottom:0; }
+            .admin-mobile-table tbody td { padding:.65rem .85rem; text-align:left; overflow-wrap:anywhere; border-bottom:1px solid #f1f5f9; }
+            .admin-mobile-table tbody td.hidden { display:block; }
+            .admin-mobile-table tbody td:last-child { border-bottom:0; }
+            .admin-mobile-table tbody td[data-label]::before { content:attr(data-label); display:block; margin-bottom:.2rem; color:#64748b; font-size:.68rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+            .admin-mobile-table tbody td[colspan] { padding:1rem; text-align:left; }
+            .admin-mobile-table tbody td > .flex { justify-content:flex-start; flex-wrap:wrap; }
+            .admin-mobile-table tbody td .mx-auto { margin-left:0; margin-right:0; }
+            .admin-mobile-table tbody tr.admin-table-note { margin-top:-.75rem; border-top:0; border-radius:0 0 .75rem .75rem; }
+            .admin-mobile-table tbody tr.admin-table-note td { padding-top:.5rem; }
         }
     </style>
 </head>
-<body class="bg-slate-50" x-data="{ sidebarOpen: false }">
+<body class="bg-slate-50" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
 
-    <div id="sidebar-backdrop" x-show="sidebarOpen" x-transition.opacity
+    <div id="sidebar-backdrop" x-cloak x-show="sidebarOpen" x-transition.opacity
          @click="sidebarOpen = false" class="fixed inset-0 z-30 bg-black/40 lg:hidden"></div>
 
-    <aside id="admin-sidebar" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-           class="fixed inset-y-0 left-0 z-40 flex w-64 flex-col shadow-xl transition-transform duration-200">
+    <aside id="admin-sidebar" :style="sidebarOpen ? 'transform: translateX(0)' : ''"
+           class="fixed inset-y-0 left-0 z-40 flex w-64 max-w-[85vw] flex-col shadow-xl transition-transform duration-200" aria-label="Navegación del panel">
 
         <div class="sidebar-logo flex shrink-0 items-center justify-center border-b px-5 py-4">
             <a href="{{ route('productos') }}">
@@ -152,6 +170,10 @@
                 @endif
             </a>
         </div>
+
+        <button type="button" @click="sidebarOpen = false" class="absolute right-3 top-3 rounded-lg p-2 text-white lg:hidden" aria-label="Cerrar menú">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
 
         <nav class="custom-scroll flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
             <a href="{{ route('admin.catalogo.index') }}" class="nav-item {{ request()->routeIs('admin.catalogo.*') ? 'active-link' : '' }}">
@@ -166,14 +188,14 @@
                 Listas de precios
             </a>
 
-            <a href="{{ route('admin.pagos.cuentas') }}" class="nav-item {{ request()->routeIs('admin.pagos.cuentas*') ? 'active-link' : '' }}">
-                <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M5 6h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm2 9h4"/></svg>
-                Cuentas bancarias
-            </a>
 
             <a href="{{ route('admin.pagos.comprobantes.index') }}" class="nav-item {{ request()->routeIs('admin.pagos.comprobantes.*') ? 'active-link' : '' }}">
                 <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 4h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
-                Cuenta corriente
+                Info de pagos
+            </a>
+            <a href="{{ route('admin.pagos.cuentas') }}" class="nav-item {{ request()->routeIs('admin.pagos.cuentas*') ? 'active-link' : '' }}">
+                <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M5 6h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm2 9h4"/></svg>
+                Cuentas bancarias
             </a>
 
             <a href="{{ route('admin.clientes.index') }}" class="nav-item {{ request()->routeIs('admin.clientes.*') ? 'active-link' : '' }}">
@@ -184,6 +206,15 @@
             <a href="{{ route('admin.vendedores.index') }}" class="nav-item {{ request()->routeIs('admin.vendedores.*') ? 'active-link' : '' }}">
                 <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-4 7a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z"/></svg>
                 Vendedores
+            </a>
+
+            <a href="{{ route('admin.reclamos.index') }}" class="nav-item {{ request()->routeIs('admin.reclamos.*') ? 'active-link' : '' }}">
+                <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0 3.75h.008M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+                Reclamos
+                @php $reclamosNuevos = \App\Models\Claim::where('estado', 'enviado')->count(); @endphp
+                @if($reclamosNuevos > 0)
+                    <span class="ml-auto rounded-full bg-[#E11A22] px-2 py-0.5 text-[11px] font-bold text-white">{{ $reclamosNuevos }}</span>
+                @endif
             </a>
 
             <div class="sidebar-divider my-2 h-px"></div>
@@ -228,7 +259,7 @@
     </aside>
 
     <header class="admin-mobile-header fixed inset-x-0 top-0 z-20 flex items-center justify-between border-b px-4 py-3 lg:hidden">
-        <button @click="sidebarOpen = !sidebarOpen" class="rounded-lg p-1.5" aria-label="Menú">
+        <button type="button" @click="sidebarOpen = !sidebarOpen" :aria-expanded="sidebarOpen.toString()" aria-controls="admin-sidebar" class="rounded-lg p-1.5" aria-label="Abrir menú">
             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <span class="text-sm font-bold text-white">Panel Rejovot</span>
@@ -237,8 +268,8 @@
         </a>
     </header>
 
-    <main class="min-h-screen bg-slate-50 lg:ml-64">
-        <div class="animate-fadeIn px-5 pb-5 pt-20 lg:px-7 lg:pb-7 lg:pt-7">
+    <main class="min-h-screen min-w-0 bg-slate-50 lg:ml-64">
+        <div class="animate-fadeIn min-w-0 px-4 pb-5 pt-20 sm:px-5 lg:px-7 lg:pb-7 lg:pt-7">
             @yield('content')
             {{ $slot ?? '' }}
         </div>

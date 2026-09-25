@@ -3,6 +3,7 @@
 namespace App\Services\Odoo;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -102,14 +103,20 @@ class OdooClient
             throw new OdooException('Falta configurar ODOO_URL y ODOO_DB en el .env.');
         }
 
-        $response = Http::timeout($this->config['timeout'])
-            ->acceptJson()
-            ->post(rtrim($this->config['url'], '/') . '/jsonrpc', [
-                'jsonrpc' => '2.0',
-                'method' => 'call',
-                'params' => compact('service', 'method', 'args'),
-                'id' => uniqid(),
-            ]);
+        try {
+            $response = Http::timeout($this->config['timeout'])
+                ->acceptJson()
+                ->post(rtrim($this->config['url'], '/') . '/jsonrpc', [
+                    'jsonrpc' => '2.0',
+                    'method' => 'call',
+                    'params' => compact('service', 'method', 'args'),
+                    'id' => uniqid(),
+                ]);
+        } catch (ConnectionException $e) {
+            // Odoo caído o sin red: que llegue como error de Odoo, así cada
+            // pantalla lo ataja igual que cualquier otro y no tira un 500.
+            throw new OdooException('No hay conexión con Odoo: ' . $e->getMessage(), 0, $e);
+        }
 
         if ($response->failed()) {
             throw new OdooException("HTTP {$response->status()} desde Odoo");

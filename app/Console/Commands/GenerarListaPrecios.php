@@ -91,20 +91,15 @@ class GenerarListaPrecios extends Command
             'Rubro',
             'Código OEM',
             'Precio de lista (sin IVA)',
-            'Stock',
-            'Oferta %',
-            'Oferta hasta',
         ], self::SEPARADOR);
 
         $pdf = new PdfTabla($rutaPdf, 'Lista de precios · Rejovot Autopartes',
             'Actualizada el ' . now()->format('d/m/Y') . ' · Precios sin IVA', [
-                ['titulo' => 'Código', 'ancho' => 78.0],
-                ['titulo' => 'Descripción', 'ancho' => 352.0],
-                ['titulo' => 'Marca', 'ancho' => 88.0],
-                ['titulo' => 'Rubro', 'ancho' => 132.0],
-                ['titulo' => 'Precio', 'ancho' => 74.0, 'alineacion' => 'derecha'],
-                ['titulo' => 'Stock', 'ancho' => 40.0, 'alineacion' => 'derecha'],
-                ['titulo' => 'Oferta', 'ancho' => 38.0, 'alineacion' => 'derecha'],
+                ['titulo' => 'Código', 'ancho' => 90.0],
+                ['titulo' => 'Descripción', 'ancho' => 420.0],
+                ['titulo' => 'Marca', 'ancho' => 100.0],
+                ['titulo' => 'Rubro', 'ancho' => 158.0],
+                ['titulo' => 'Precio', 'ancho' => 34.0 + 40.0, 'alineacion' => 'derecha'],
             ]);
 
         $filas = 0;
@@ -122,9 +117,6 @@ class GenerarListaPrecios extends Command
                         $producto->oem_codes ?? '',
                         // Con coma decimal: es el separador que espera Excel acá.
                         number_format((float) $producto->list_price, 2, ',', ''),
-                        (int) $producto->stock,
-                        $producto->en_oferta ? number_format((float) $producto->discount_percent, 2, ',', '') : '',
-                        $producto->en_oferta ? $producto->discount_to?->format('d/m/Y') : '',
                     ], self::SEPARADOR);
 
                     $pdf->fila([
@@ -133,8 +125,6 @@ class GenerarListaPrecios extends Command
                         $producto->brand?->name ?? '',
                         $producto->category?->name ?? '',
                         '$ ' . number_format((float) $producto->list_price, 2, ',', '.'),
-                        (string) (int) $producto->stock,
-                        $producto->en_oferta ? rtrim(rtrim(number_format((float) $producto->discount_percent, 2, ',', ''), '0'), ',') . '%' : '',
                     ]);
 
                     $filas++;

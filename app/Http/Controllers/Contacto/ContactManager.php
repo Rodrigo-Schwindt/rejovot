@@ -93,8 +93,10 @@ class ContactManager extends Controller
                 continue;
             }
 
-            if ($type === 'whatsapp_flotante') {
-                $rows = array_values(array_filter($rows, fn ($r) => $r['type'] !== 'whatsapp_flotante'));
+            // De los fijos hay uno solo: si llega repetido, se queda el último.
+            if (in_array($type, ContactInfoItem::TIPOS_FIJOS, true)) {
+                $isFixed = true;
+                $rows = array_values(array_filter($rows, fn ($r) => $r['type'] !== $type));
             }
 
             $rows[] = [
@@ -106,21 +108,23 @@ class ContactManager extends Controller
             ];
         }
 
-        // Si el fijo no llegó en el request, lo restauramos de la base.
-        if (! collect($rows)->contains('type', 'whatsapp_flotante')) {
-            $oldFixed = ContactInfoItem::where('contact_id', $contact->id)
-                ->where('type', 'whatsapp_flotante')
+        // Si alguno de los fijos no llegó en el request, se restaura de la base.
+        foreach (ContactInfoItem::TIPOS_FIJOS as $fijo) {
+            if (collect($rows)->contains('type', $fijo)) {
+                continue;
+            }
+
+            $anterior = ContactInfoItem::where('contact_id', $contact->id)
+                ->where('type', $fijo)
                 ->first();
 
-            if ($oldFixed) {
-                $rows[] = [
-                    'contact_id' => $contact->id,
-                    'type'       => 'whatsapp_flotante',
-                    'value'      => $oldFixed->value,
-                    'is_fixed'   => true,
-                    'sort_order' => $order++,
-                ];
-            }
+            $rows[] = [
+                'contact_id' => $contact->id,
+                'type'       => $fijo,
+                'value'      => $anterior->value ?? '',
+                'is_fixed'   => true,
+                'sort_order' => $order++,
+            ];
         }
 
         $contact->infoItems()->delete();

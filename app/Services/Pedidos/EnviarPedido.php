@@ -2,13 +2,17 @@
 
 namespace App\Services\Pedidos;
 
+use App\Mail\PedidoRecibidoMail;
 use App\Models\Product;
 use App\Services\Carrito\Carrito;
 use App\Services\Odoo\OdooCatalog;
 use App\Services\Odoo\OdooPedidos;
 use App\Services\Sesion\ClienteActivo;
+use App\Support\Destinatarios;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 
 /**
@@ -85,7 +89,50 @@ class EnviarPedido
             $observaciones,
         );
 
+        $this->avisar($pedido['name'], $cliente, $carrito, $envio, $observaciones, $quedan);
+
         return $pedido + ['enviados' => $enviados, 'quedan' => $quedan];
+    }
+
+    /**
+     * Avisa del pedido al cliente, a su vendedor y a la casilla de Rejovot.
+     * Si el mail falla, el pedido ya está en Odoo: sólo se registra el error.
+     */
+    private function avisar(
+        string $numero,
+        \App\Models\Customer $cliente,
+        Carrito $carrito,
+        ?array $envio,
+        string $observaciones,
+        array $quedan,
+    ): void {
+        $destinos = Destinatarios::delCliente($cliente);
+
+        if (! $destinos) {
+            return;
+        }
+
+        $datos = [
+            'numero' => $numero,
+            'cliente' => $cliente->name,
+            'entrega' => $envio['nombre'] ?? 'Entrega a convenir',
+            'observaciones' => trim($observaciones),
+            'sin_stock' => $quedan,
+            'totales' => $carrito->totales($envio),
+            'lineas' => array_map(fn (array $item) => [
+                'codigo' => $item['producto']['codigo'],
+                'nombre' => $item['producto']['nombre'],
+                'cantidad' => $item['cantidad'],
+                'precio' => (float) $item['producto']['costo'],
+                'subtotal' => (float) $item['subtotal'],
+            ], $carrito->itemsConStock()),
+        ];
+
+        try {
+            Mail::to($destinos)->send(new PedidoRecibidoMail($datos));
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo avisar del pedido ' . $numero . ': ' . $e->getMessage());
+        }
     }
 
     /**

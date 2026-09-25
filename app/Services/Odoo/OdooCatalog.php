@@ -33,6 +33,16 @@ class OdooCatalog
     {
     }
 
+    /** Impuestos de venta de la compañía, para saber el % de cada producto. */
+    public function impuestosDeVenta(): array
+    {
+        return $this->odoo->searchRead('account.tax', [
+            ['type_tax_use', '=', 'sale'],
+            ['company_id', '=', config('odoo.company_id')],
+            ['amount_type', '=', 'percent'],
+        ], ['amount']);
+    }
+
     public function categories(): array
     {
         return $this->odoo->searchRead('product.category', [], ['name', 'complete_name', 'parent_id']);
@@ -61,6 +71,8 @@ class OdooCatalog
             'qty_available',
             // Es el precio de lista público y coincide con el de la tarifa.
             'lst_price_with_margin',
+            // «Impuestos cliente»: define el IVA de la línea.
+            'taxes_id',
             'active',
             'website_published',
             'write_date',

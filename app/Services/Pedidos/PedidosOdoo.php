@@ -167,29 +167,36 @@ class PedidosOdoo implements PedidosRepository
             'importe' => (float) $row['amount_untaxed'],
             'iva' => (float) $row['amount_tax'],
             'total' => (float) $row['amount_total'],
-            'estado' => $this->estado($row['state'], $aEntregar, $entregadas),
+            'estado' => $this->estado($row, $aEntregar, $entregadas),
             'entrega' => $this->entrega($row),
             'lineas' => $lineas,
         ];
     }
 
     /**
-     * Odoo deja casi todos los pedidos en «sale», así que el estado que le
-     * importa al cliente sale de las entregas, no del estado del pedido.
+     * Estado que le importa al cliente, del más avanzado al menos:
+     * cancelado, en revisión, facturado, enviado y pendiente.
+     *
+     * No sale del campo `state` de Odoo, que deja casi todo en «sale»: el envío
+     * se deduce de las cantidades entregadas y la factura, de `invoice_status`.
      */
-    private function estado(string $state, int $aEntregar, int $entregadas): string
+    private function estado(array $row, int $aEntregar, int $entregadas): string
     {
-        if ($state === 'cancel') {
+        if ($row['state'] === 'cancel') {
             return 'cancelado';
         }
 
         // Presupuesto cargado desde la web que Rejovot todavía no confirmó.
-        if (in_array($state, ['draft', 'sent'], true)) {
+        if (in_array($row['state'], ['draft', 'sent'], true)) {
             return 'revision';
         }
 
+        if (($row['invoice_status'] ?? '') === 'invoiced') {
+            return 'facturado';
+        }
+
         if ($aEntregar > 0 && $entregadas === $aEntregar) {
-            return 'entregado';
+            return 'enviado';
         }
 
         return 'pendiente';

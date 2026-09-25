@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Cuenta\ComprobantesController as CuentaComprobantesController;
 use App\Http\Controllers\Clientes\ClientesAdminController;
+use App\Http\Controllers\Reclamos\FotoReclamoController;
+use App\Http\Controllers\Reclamos\ReclamosAdminController;
+use App\Livewire\Vistas\Reclamos\NuevoReclamoPage;
+use App\Livewire\Vistas\Reclamos\ReclamoDetallePage;
+use App\Livewire\Vistas\Reclamos\ReclamosPage;
 use App\Http\Controllers\Clientes\VendedoresAdminController;
 use App\Http\Controllers\Auth\IngresoController;
 use App\Http\Controllers\Auth\LoginController;
@@ -35,12 +40,21 @@ Route::get('/', fn () => redirect()->route('productos'))->name('home');
 Route::get('/productos', ProductosPage::class)->name('productos');
 Route::get('/productos/{codigo}', ProductoDetallePage::class)->name('producto');
 Route::get('/busqueda-por-vehiculo', BusquedaVehiculoPage::class)->name('vehiculos');
-Route::get('/carrito', CarritoPage::class)->name('carrito');
-Route::get('/mis-pedidos', MisPedidosPage::class)->name('pedidos');
-Route::get('/estado-de-cuenta', EstadoCuentaPage::class)->name('cuenta');
-Route::get('/estado-de-cuenta/comprobante/{move}', [CuentaComprobantesController::class, 'show'])
-    ->whereNumber('move')->name('cuenta.comprobante');
-Route::get('/info-de-pagos', InfoPagosPage::class)->name('pagos');
+// Sólo con sesión del sitio: sin cliente o vendedor no hay nada que mostrar.
+Route::middleware('auth:sitio')->group(function () {
+    Route::get('/carrito', CarritoPage::class)->name('carrito');
+    Route::get('/mis-pedidos', MisPedidosPage::class)->name('pedidos');
+    Route::get('/estado-de-cuenta', EstadoCuentaPage::class)->name('cuenta');
+    Route::get('/estado-de-cuenta/comprobante/{move}', [CuentaComprobantesController::class, 'show'])
+        ->whereNumber('move')->name('cuenta.comprobante');
+    Route::get('/info-de-pagos', InfoPagosPage::class)->name('pagos');
+
+    Route::get('/reclamos', ReclamosPage::class)->name('reclamos');
+    Route::get('/reclamos/nuevo', NuevoReclamoPage::class)->name('reclamos.nuevo');
+    Route::get('/reclamos/{reclamo}', ReclamoDetallePage::class)->whereNumber('reclamo')->name('reclamos.ver');
+    Route::get('/reclamos/{reclamo}/fotos/{foto}', [FotoReclamoController::class, 'sitio'])
+        ->whereNumber(['reclamo', 'foto'])->name('reclamos.foto');
+});
 Route::get('/margenes', MargenesPage::class)->name('margenes');
 Route::get('/lista-de-precios', ListaPreciosPage::class)->name('precios');
 Route::get('/lista-de-precios/{lista}/descargar', [ListasPreciosController::class, 'download'])->name('precios.descargar');
@@ -95,11 +109,17 @@ Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function
     Route::post('/cuentas-bancarias', [CuentasBancariasController::class, 'save'])->name('admin.pagos.cuentas.save');
 
     Route::get('/comprobantes', [ComprobantesController::class, 'index'])->name('admin.pagos.comprobantes.index');
+    Route::post('/comprobantes/mail', [ComprobantesController::class, 'guardarMail'])->name('admin.pagos.comprobantes.mail');
 
     Route::get('/clientes', [ClientesAdminController::class, 'index'])->name('admin.clientes.index');
     Route::get('/clientes/{cliente}', [ClientesAdminController::class, 'show'])->name('admin.clientes.show');
     Route::get('/vendedores', [VendedoresAdminController::class, 'index'])->name('admin.vendedores.index');
     Route::get('/vendedores/{vendedor}', [VendedoresAdminController::class, 'show'])->name('admin.vendedores.show');
+
+    Route::get('/reclamos', [ReclamosAdminController::class, 'index'])->name('admin.reclamos.index');
+    Route::get('/reclamos/{reclamo}', [ReclamosAdminController::class, 'show'])->name('admin.reclamos.show');
+    Route::patch('/reclamos/{reclamo}', [ReclamosAdminController::class, 'update'])->name('admin.reclamos.update');
+    Route::get('/reclamos/{reclamo}/fotos/{foto}', [FotoReclamoController::class, 'admin'])->name('admin.reclamos.foto');
     Route::get('/comprobantes/{comprobante}/descargar', [ComprobantesController::class, 'download'])->name('admin.pagos.comprobantes.download');
     Route::patch('/comprobantes/{comprobante}/estado', [ComprobantesController::class, 'estado'])->name('admin.pagos.comprobantes.estado');
     Route::delete('/comprobantes/{comprobante}', [ComprobantesController::class, 'destroy'])->name('admin.pagos.comprobantes.destroy');

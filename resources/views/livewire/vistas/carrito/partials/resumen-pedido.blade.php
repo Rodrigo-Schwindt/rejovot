@@ -15,6 +15,19 @@
             </p>
         @endif
 
+        @if($totales['descuento'] > 0)
+            {{-- Con descuento se muestran las dos líneas: de cuánto parte y cuánto se descontó. --}}
+            <div class="flex items-center justify-between py-1.5 text-[15px] text-[#111]">
+                <span>Subtotal a precio de lista</span>
+                <span class="font-medium text-slate-900">{{ Precio::ar($totales['lista']) }}</span>
+            </div>
+
+            <div class="flex items-center justify-between py-1.5 text-[15px] text-[#1E9E3E]">
+                <span>Descuento {{ rtrim(rtrim(number_format($totales['descuento_porcentaje'], 2, ',', '.'), '0'), ',') }}%</span>
+                <span class="font-medium">− {{ Precio::ar($totales['descuento']) }}</span>
+            </div>
+        @endif
+
         <div class="flex items-center justify-between py-1.5 text-[15px] text-[#111]">
             <span>Subtotal</span>
             <span class="font-medium text-slate-900">{{ Precio::ar($totales['subtotal']) }}</span>
@@ -33,7 +46,12 @@
         <hr class="my-3 border-slate-200">
 
         <div class="flex items-center justify-between py-1.5 text-[15px] text-slate-700">
-            <span>IVA {{ config('carrito.iva') }}%</span>
+            <span>
+                IVA
+                @if($totales['iva_tasa'] !== null)
+                    {{ rtrim(rtrim(number_format($totales['iva_tasa'], 2, ',', '.'), '0'), ',') }}%
+                @endif
+            </span>
             <span class="font-medium text-slate-900">{{ Precio::ar($totales['iva']) }}</span>
         </div>
 

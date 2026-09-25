@@ -16,7 +16,7 @@
 
         {{-- Datos de contacto dinámicos --}}
         <div class="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <span class="sec-label">Información de contacto</span>
                 <button type="button" id="add-info-item" class="btn btn-primary btn-sm">+ Añadir dato</button>
             </div>
@@ -90,7 +90,7 @@
         </div>
 
         {{-- Mapa --}}
-        <div class="space-y-3 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+        {{-- <div class="space-y-3 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
             <span class="sec-label">Mapa</span>
             <div>
                 <label class="f-label" for="maps_adm">Link de Google Maps</label>
@@ -104,7 +104,7 @@
             @if($contact?->frame_adm)
                 <div class="mt-2 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">{!! $contact->frame_adm !!}</div>
             @endif
-        </div>
+        </div> --}}
 
         <div class="flex justify-end">
             <button type="submit" class="btn btn-primary px-8">Guardar cambios</button>

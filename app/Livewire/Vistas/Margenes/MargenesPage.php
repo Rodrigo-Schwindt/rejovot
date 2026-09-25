@@ -12,6 +12,9 @@ class MargenesPage extends Component
 {
     public float $general = Margenes::POR_DEFECTO;
 
+    /** Descuento sobre la lista: es el «Tu precio» del catálogo. */
+    public float $descuento = Margenes::DESCUENTO_POR_DEFECTO;
+
     /** Márgenes por marca y por familia, indexados por clave. */
     public array $marcas = [];
     public array $familias = [];
@@ -21,6 +24,7 @@ class MargenesPage extends Component
         $opciones = $catalogo->filtros();
 
         $this->general = $margenes->general();
+        $this->descuento = $margenes->descuento();
 
         foreach ($opciones['marcas'] as $marca) {
             $clave = Margenes::clave($marca);
@@ -37,6 +41,15 @@ class MargenesPage extends Component
     {
         $margenes->guardarGeneral((float) $value);
         $this->general = $margenes->general();
+        $this->descuento = $margenes->descuento();
+
+        $this->avisar();
+    }
+
+    public function updatedDescuento($value, Margenes $margenes): void
+    {
+        $margenes->guardarDescuento((float) $value);
+        $this->descuento = $margenes->descuento();
 
         $this->avisar();
     }
