@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -17,6 +18,9 @@ class ListasPreciosController extends Controller
     public function download(PriceList $lista)
     {
         abort_unless($lista->publicada, 404);
+
+        $lista = $this->conArchivos($lista);
+
         abort_unless(Storage::disk('public')->exists($lista->archivo), 404);
 
         return Storage::disk('public')->download(
@@ -33,6 +37,7 @@ class ListasPreciosController extends Controller
     {
         abort_unless($lista->publicada, 404);
 
+        $lista = $this->conArchivos($lista);
         $archivo = $lista->archivo_para_ver;
 
         abort_unless($archivo && Storage::disk('public')->exists($archivo), 404);
@@ -41,6 +46,36 @@ class ListasPreciosController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $lista->descripcion . '.pdf"',
         ]);
+    }
+
+    /**
+     * La lista automática se rehace sola si le faltan los archivos (servidor
+     * nuevo, storage sin subir, o el cron todavía no corrió). El lock evita que
+     * varios visitantes a la vez la generen en paralelo.
+     */
+    private function conArchivos(PriceList $lista): PriceList
+    {
+        $disco = Storage::disk('public');
+        $completa = fn (PriceList $l) => $l->archivo && $disco->exists($l->archivo)
+            && (! $l->archivo_pdf || $disco->exists($l->archivo_pdf));
+
+        if ($lista->origen !== PriceList::ORIGEN_ODOO || $completa($lista)) {
+            return $lista;
+        }
+
+        // Son decenas de miles de filas: no entra en el tope de 30 segundos.
+        set_time_limit(300);
+
+        Cache::lock('precios:generar', 300)->block(290, function () use ($completa) {
+            // Si otro pedido la generó mientras esperábamos, no se repite.
+            $actual = PriceList::automatica()->first();
+
+            if (! $actual || ! $completa($actual)) {
+                Artisan::call('precios:generar');
+            }
+        });
+
+        return PriceList::automatica()->first() ?? $lista;
     }
 
     /* ---------------- Admin ---------------- */

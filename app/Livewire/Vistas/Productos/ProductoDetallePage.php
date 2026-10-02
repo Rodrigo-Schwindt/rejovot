@@ -5,6 +5,7 @@ namespace App\Livewire\Vistas\Productos;
 use App\Contracts\CatalogoRepository;
 use App\Models\Contact;
 use App\Services\Carrito\Carrito;
+use App\Services\Catalogo\RefrescoEnVivo;
 use App\Services\Margenes\Margenes;
 use App\Services\Sesion\ClienteActivo;
 use Livewire\Attributes\Layout;
@@ -26,8 +27,12 @@ class ProductoDetallePage extends Component
     /** Qué es cada relacionado (alternativo o accesorio), por código. */
     public array $relacionTipos = [];
 
-    public function mount(string $codigo, CatalogoRepository $catalogo): void
+    public function mount(string $codigo, CatalogoRepository $catalogo, RefrescoEnVivo $refresco): void
     {
+        // Precio, stock y si sigue publicado, recién leídos de Odoo: si lo
+        // despublicaron hace un minuto, ya no se muestra.
+        $refresco->codigos([$codigo]);
+
         $producto = $catalogo->detalle($codigo);
         abort_unless($producto, 404);
 

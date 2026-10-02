@@ -18,6 +18,19 @@ class OdooClient
     {
     }
 
+    /**
+     * Copia con otro tiempo máximo de espera. Para las lecturas que se hacen
+     * mientras alguien mira la página: mejor cortar rápido y usar el dato
+     * guardado que dejar la pantalla colgada si Odoo tarda.
+     */
+    public function conTimeout(int $segundos): static
+    {
+        $copia = clone $this;
+        $copia->config['timeout'] = $segundos;
+
+        return $copia;
+    }
+
     /** Login cacheado: devuelve el uid del usuario de servicio. */
     public function uid(): int
     {

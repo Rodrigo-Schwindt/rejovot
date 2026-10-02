@@ -1,6 +1,11 @@
 <div>
     {{-- Catálogo sincronizado de Odoo. El precio depende del cliente elegido. --}}
 
+    {{-- El contador del carrito sigue lo que carguen otras sesiones del mismo cliente. --}}
+    @if($clienteElegido)
+        <span wire:poll.10s="sincronizarCarrito" class="hidden"></span>
+    @endif
+
     @php
         // Cambia con cada filtro, vista o página: fuerza a redibujar el listado
         // completo y así las filas/cards vuelven a animar su entrada.

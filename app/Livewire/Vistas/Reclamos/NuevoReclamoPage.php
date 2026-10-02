@@ -4,6 +4,7 @@ namespace App\Livewire\Vistas\Reclamos;
 
 use App\Mail\ReclamoCreadoMail;
 use App\Models\Claim;
+use App\Models\Contact;
 use App\Models\Product;
 use App\Services\Odoo\OdooException;
 use App\Services\Odoo\OdooFacturas;
@@ -289,7 +290,7 @@ class NuevoReclamoPage extends Component
     private function avisar(Claim $reclamo): void
     {
         $reclamo->load(['customer.salesperson', 'items', 'fotos', 'user']);
-        $destinos = Destinatarios::delCliente($reclamo->customer);
+        $destinos = Destinatarios::delCliente($reclamo->customer, casillaAdmin: Contact::mailReclamos());
 
         if (! $destinos) {
             return;

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Clientes;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
 use App\Models\Salesperson;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -25,7 +24,7 @@ class VendedoresAdminController extends Controller
             ->get()
             ->keyBy('salesperson_id');
 
-        $query = Salesperson::withCount([
+        $query = Salesperson::vendedores()->withCount([
             'customers as clientes_count' => fn ($q) => $q->where('active', true),
         ]);
 
@@ -60,11 +59,10 @@ class VendedoresAdminController extends Controller
             'accesos' => $accesos,
             'filtros' => $filtros,
             'totales' => [
-                'activos' => Salesperson::where('active', true)->count(),
-                'con_cartera' => Salesperson::whereHas('customers', fn ($q) => $q->where('active', true))->count(),
+                'activos' => Salesperson::vendedores()->where('active', true)->count(),
+                'con_cartera' => Salesperson::vendedores()->whereHas('customers', fn ($q) => $q->where('active', true))->count(),
                 'entraron' => $accesos->count(),
             ],
-            'sinVendedor' => Customer::where('active', true)->whereNull('salesperson_id')->count(),
         ]);
     }
 

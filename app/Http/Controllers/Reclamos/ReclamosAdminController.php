@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Reclamos;
 use App\Http\Controllers\Controller;
 use App\Mail\ReclamoEstadoMail;
 use App\Models\Claim;
+use App\Models\Contact;
 use App\Support\Destinatarios;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -50,7 +51,26 @@ class ReclamosAdminController extends Controller
             'filtros' => $filtros,
             'estados' => Claim::ESTADOS,
             'porEstado' => $porEstado,
+            'contacto' => Contact::first(),
         ]);
+    }
+
+    /** Casilla a la que llega cada reclamo nuevo. */
+    public function guardarMail(Request $request)
+    {
+        $datos = $request->validate([
+            'mail_reclamos' => ['nullable', 'email', 'max:255'],
+        ], [
+            'mail_reclamos.email' => 'Escribí una dirección de correo válida.',
+        ]);
+
+        $contacto = Contact::first() ?? new Contact;
+        $contacto->mail_reclamos = $datos['mail_reclamos'] ?: null;
+        $contacto->save();
+
+        return back()->with('success', $contacto->mail_reclamos
+            ? "Los reclamos nuevos van a llegar a {$contacto->mail_reclamos}."
+            : 'Sin casilla propia: los reclamos llegan al mail de contacto.');
     }
 
     public function show(Claim $reclamo)

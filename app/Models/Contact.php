@@ -16,6 +16,7 @@ class Contact extends Model
         'phone_amd',
         'mail_adm',
         'mail_comprobantes',
+        'mail_reclamos',
         'wssp',
         'maps_adm',
         'frame_adm',
@@ -37,6 +38,14 @@ class Contact extends Model
         $contacto = static::first();
 
         return $contacto?->mail_comprobantes ?: $contacto?->mail_adm;
+    }
+
+    /** Casilla que recibe los reclamos. Sin una propia, van al mail de contacto. */
+    public static function mailReclamos(): ?string
+    {
+        $contacto = static::first();
+
+        return $contacto?->mail_reclamos ?: $contacto?->mail_adm;
     }
 
     public function infoItems()

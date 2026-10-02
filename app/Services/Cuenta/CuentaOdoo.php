@@ -106,7 +106,8 @@ class CuentaOdoo implements CuentaRepository
     private function comoArray(array $row): array
     {
         $vencimiento = $row['date_maturity'] ?: $row['date'];
-        [$tipo, $numero] = $this->tipoYNumero($row['move_name'] ?? '');
+        $comprobante = $this->nombreComprobante($row);
+        [$tipo, $numero] = $this->tipoYNumero($comprobante);
 
         return [
             'emision' => $this->fecha($row['date']),
@@ -119,9 +120,22 @@ class CuentaOdoo implements CuentaRepository
             'importe_origen' => (float) $row['amount_currency'],
             'importe_bruto_origen' => (float) $row['amount_currency'],
             'vencido' => $vencimiento < now()->toDateString(),
-            'comprobante' => $row['move_name'] ?? '',
+            'comprobante' => $comprobante,
             'move_id' => $row['move_id'][0] ?? null,
         ];
+    }
+
+    /**
+     * Nombre actual del comprobante. Se toma del asiento y no del `move_name`
+     * del apunte: en Odoo hay apuntes con un nombre viejo guardado (una «NC A»
+     * que no existe sobre lo que hoy es una «FC A»). Odoo le agrega la
+     * referencia entre paréntesis al nombre a mostrar: se le saca.
+     */
+    private function nombreComprobante(array $row): string
+    {
+        $delAsiento = trim(preg_replace('/\s*\(.*\)$/', '', (string) ($row['move_id'][1] ?? '')));
+
+        return $delAsiento !== '' ? $delAsiento : trim((string) ($row['move_name'] ?? ''));
     }
 
     /**

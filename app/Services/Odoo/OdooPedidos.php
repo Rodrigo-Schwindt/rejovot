@@ -2,6 +2,8 @@
 
 namespace App\Services\Odoo;
 
+use Illuminate\Support\Facades\Log;
+
 /**
  * Pedidos del cliente en Odoo (sale.order).
  *
@@ -104,8 +106,12 @@ class OdooPedidos
     }
 
     /**
-     * Crea el pedido en Odoo como presupuesto (borrador), para que Rejovot lo
-     * revise y lo confirme desde el ERP.
+     * Crea el pedido en Odoo e intenta confirmarlo. Al confirmar, Odoo revisa
+     * la cuenta corriente con sus reglas de excepción:
+     *  - Sin problemas: queda como «Pedido de venta» y entra en el filtro
+     *    «SIN IMPRIMIR CONFIRMADA P/EMPRESA».
+     *  - Deuda vencida o límite de crédito excedido: queda como «Presupuesto
+     *    enviado» con la excepción a la vista, y Rejovot lo revisa a mano.
      *
      * Los precios NO se mandan: Odoo los calcula con la tarifa del cliente al
      * crear cada línea, igual que cuando cargan un pedido a mano. Lo único que
@@ -113,7 +119,7 @@ class OdooPedidos
      *
      * @param  array<int, array{product_id:int, cantidad:float}>  $lineas
      * @param  array{id:int, producto_id:?int, importe:float}|null  $envio
-     * @return array{id:int, name:string}
+     * @return array{id:int, name:string, estado:string, excepcion:?string}
      */
     public function crear(int $partnerId, array $lineas, ?array $envio, ?int $vendedorUid, string $observaciones = ''): array
     {
@@ -148,6 +154,7 @@ class OdooPedidos
             'user_id' => $vendedorUid ?: ($partner['user_id'][0] ?? false),
             'carrier_id' => $envio['id'] ?? false,
             'origin' => 'Web',
+            'website_id' => config('odoo.website_id'),
             'order_line' => $orderLines,
         ]);
 
@@ -159,9 +166,40 @@ class OdooPedidos
             ]);
         }
 
-        $creado = $this->odoo->read('sale.order', [$id], ['name'])[0] ?? [];
+        $this->confirmar($id);
 
-        return ['id' => $id, 'name' => $creado['name'] ?? (string) $id];
+        $creado = $this->odoo->read('sale.order', [$id], ['name', 'state', 'main_exception_id'])[0] ?? [];
+
+        return [
+            'id' => $id,
+            'name' => $creado['name'] ?? (string) $id,
+            'estado' => $creado['state'] ?? 'draft',
+            'excepcion' => $creado['main_exception_id'][1] ?? null,
+        ];
+    }
+
+    /**
+     * Confirma el pedido. Si la cuenta corriente tiene una excepción, Odoo no lo
+     * confirma (devuelve el aviso en vez de error) y se marca «Presupuesto
+     * enviado», como pidió Rejovot. Si Odoo rechaza la confirmación por otro
+     * motivo, el pedido igual quedó creado: se registra y se sigue, para no
+     * perderle el pedido al cliente.
+     */
+    protected function confirmar(int $id): void
+    {
+        try {
+            $this->odoo->call('sale.order', 'action_confirm', [[$id]]);
+        } catch (OdooException $e) {
+            Log::warning("Odoo no confirmó el pedido web {$id}: " . $e->getMessage());
+
+            return;
+        }
+
+        $pedido = $this->odoo->read('sale.order', [$id], ['state', 'main_exception_id'])[0] ?? [];
+
+        if (($pedido['state'] ?? null) === 'draft' && ! empty($pedido['main_exception_id'])) {
+            $this->odoo->call('sale.order', 'action_quotation_sent', [[$id]]);
+        }
     }
 
     protected function dominio(int $partnerId): array

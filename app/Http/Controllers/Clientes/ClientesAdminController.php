@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 /**
  * Clientes, tal cual vienen de Odoo (sólo lectura). Acá se consulta quién es
  * cada uno, qué vendedor tiene asignado y si ya entró al sitio.
+ *
+ * Sólo los que tienen asignado uno de los vendedores de Rejovot (GERENCIA y
+ * «VENDEDOR n», ver Salesperson): la base de Odoo trae decenas de miles de
+ * contactos más que no son clientes a atender.
  */
 class ClientesAdminController extends Controller
 {
@@ -24,17 +28,15 @@ class ClientesAdminController extends Controller
             'acceso' => trim((string) $request->get('acceso')),
         ];
 
-        $query = Customer::query()->with('salesperson');
+        $query = $this->clientes()->with('salesperson');
 
         if ($filtros['q'] !== '') {
             $query->buscar($filtros['q']);
         }
 
-        match ($filtros['vendedor']) {
-            0 => null,
-            -1 => $query->whereNull('salesperson_id'),
-            default => $query->where('salesperson_id', $filtros['vendedor']),
-        };
+        if ($filtros['vendedor'] > 0) {
+            $query->where('salesperson_id', $filtros['vendedor']);
+        }
 
         match ($filtros['estado']) {
             'activos' => $query->where('active', true),
@@ -56,14 +58,22 @@ class ClientesAdminController extends Controller
             // Los pocos sin nombre (contactos vacíos de Odoo) van al final.
             'clientes' => $query->orderByRaw("(name IS NULL OR name = '') ASC")->orderBy('name')->paginate(25)->withQueryString(),
             'filtros' => $filtros,
-            'vendedores' => Salesperson::orderBy('name')->get(),
+            'vendedores' => Salesperson::vendedores()->orderBy('name')->get(),
             'totales' => [
-                'activos' => Customer::where('active', true)->count(),
-                'con_vendedor' => Customer::where('active', true)->whereNotNull('salesperson_id')->count(),
-                'con_web' => Customer::where('active', true)->where('has_portal', true)->count(),
-                'entraron' => User::delSitio()->where('role', User::CLIENTE)->count(),
+                'activos' => $this->clientes()->where('active', true)->count(),
+                'inactivos' => $this->clientes()->where('active', false)->count(),
+                'con_web' => $this->clientes()->where('active', true)->where('has_portal', true)->count(),
+                'entraron' => $this->clientes()
+                    ->whereIn('id', User::where('role', User::CLIENTE)->whereNotNull('customer_id')->select('customer_id'))
+                    ->count(),
             ],
         ]);
+    }
+
+    /** Clientes de los vendedores de Rejovot. */
+    private function clientes(): Builder
+    {
+        return Customer::query()->whereIn('salesperson_id', Salesperson::vendedores()->select('id'));
     }
 
     public function show(Customer $cliente)

@@ -55,13 +55,6 @@
                 <span wire:loading.remove wire:target="verDetalle('{{ $pedido['numero'] }}')">{{ $abiertoAca ? 'Ocultar detalle' : 'Ver detalle' }}</span>
                 <span wire:loading wire:target="verDetalle('{{ $pedido['numero'] }}')">Cargando…</span>
             </button>
-
-            <button type="button" wire:click="recomprar('{{ $pedido['numero'] }}')"
-                    wire:loading.attr="disabled" wire:target="recomprar('{{ $pedido['numero'] }}')"
-                    class="h-[44px] cursor-pointer rounded-[4px] border border-[#002B56] px-6 text-[14px] font-bold uppercase tracking-wide text-[#002B56] transition hover:bg-[#002B56] hover:text-white disabled:opacity-70">
-                <span wire:loading.remove wire:target="recomprar('{{ $pedido['numero'] }}')">Recomprar</span>
-                <span wire:loading wire:target="recomprar('{{ $pedido['numero'] }}')">Agregando…</span>
-            </button>
         </div>
     </td>
 </tr>

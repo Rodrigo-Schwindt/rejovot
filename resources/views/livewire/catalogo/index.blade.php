@@ -139,6 +139,9 @@
                         <td data-label="Producto" class="px-4 py-3">
                             <span class="font-medium text-[#2563C9]">{{ $producto->code ?: '—' }}</span>
                             <span class="block max-w-[380px] text-xs text-slate-600">{{ Str::limit($producto->name, 80) }}</span>
+                            <a href="{{ route('admin.catalogo.seo', $producto) }}" class="mt-1 inline-block text-[11px] font-medium text-slate-400 hover:text-[#2563C9] hover:underline">
+                                SEO{{ $producto->seo_title || $producto->seo_description || $producto->seo_keywords ? ' · a mano' : '' }}
+                            </a>
                             @if($producto->en_oferta)
                                 <span class="mt-1 inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-[11px] font-bold uppercase text-[#E11A22]">
                                     Oferta {{ rtrim(rtrim(number_format((float) $producto->discount_percent, 2, ',', '.'), '0'), ',') }}%

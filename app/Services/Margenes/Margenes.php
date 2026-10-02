@@ -28,7 +28,8 @@ class Margenes
     {
     }
 
-    public const POR_DEFECTO = 5.0;
+    /** Todo arranca en cero: cada cliente carga después el margen que quiera. */
+    public const POR_DEFECTO = 0.0;
 
     /** El descuento arranca en cero: lo define el cliente desde Márgenes. */
     public const DESCUENTO_POR_DEFECTO = 0.0;

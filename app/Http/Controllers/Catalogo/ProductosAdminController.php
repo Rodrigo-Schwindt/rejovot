@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\ProductoSeo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -71,6 +72,34 @@ class ProductosAdminController extends Controller
         return back()->with('success', $producto->destacado
             ? "«{$producto->code}» se agregó al banner."
             : "«{$producto->code}» se quitó del banner.");
+    }
+
+    /** Metadata del producto: la automática y, si hay, la escrita a mano. */
+    public function seo(Product $producto)
+    {
+        $producto->load(['brand', 'category']);
+
+        return view('livewire.catalogo.seo', [
+            'producto' => $producto,
+            'automatico' => ProductoSeo::automatico($producto),
+            'final' => ProductoSeo::para($producto),
+        ]);
+    }
+
+    /** Lo que quede vacío vuelve a la metadata automática. */
+    public function guardarSeo(Request $request, Product $producto)
+    {
+        $datos = $request->validate([
+            'seo_title' => ['nullable', 'string', 'max:120'],
+            'seo_description' => ['nullable', 'string', 'max:320'],
+            'seo_keywords' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $producto->update(array_map(fn ($v) => trim((string) $v) ?: null, $datos));
+
+        return back()->with('success', array_filter($producto->only(['seo_title', 'seo_description', 'seo_keywords']))
+            ? "Metadata de «{$producto->code}» guardada."
+            : "«{$producto->code}» vuelve a usar la metadata automática.");
     }
 
     /** Quita todos los destacados de una sola vez. */

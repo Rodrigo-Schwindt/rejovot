@@ -1,7 +1,13 @@
 @php use App\Support\Precio; @endphp
 
 <div>
-    {{-- Carrito de sesión. Al confirmar se crea el pedido en Odoo con lo que tiene stock. --}}
+    {{-- Carrito del cliente, compartido entre todos los que lo operan. Al confirmar
+         se crea el pedido en Odoo con lo que tiene stock. --}}
+
+    {{-- Trae lo que cambie otra sesión del mismo cliente (vendedor, otro dispositivo). --}}
+    @if($clienteActivo)
+        <span wire:poll.5s="sincronizar" class="hidden"></span>
+    @endif
 
     @include('livewire.vistas.productos.partials.visor-imagenes')
 

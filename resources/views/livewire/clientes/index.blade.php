@@ -6,7 +6,7 @@
     <div>
         <h2 class="text-xl font-semibold text-slate-800">Clientes</h2>
         <p class="mt-1 text-sm text-slate-500">
-            Vienen de Odoo y se actualizan solos cada hora. Acá se consultan; los cambios se hacen en Odoo.
+            Los que tienen asignado un vendedor de Rejovot. Vienen de Odoo y se actualizan solos cada hora: acá se consultan, los cambios se hacen en Odoo.
         </p>
     </div>
 
@@ -15,7 +15,7 @@
         @php
             $tarjetas = [
                 ['Activos', $totales['activos'], 'estado=activos'],
-                ['Con vendedor asignado', $totales['con_vendedor'], 'estado=activos&vendedor=0'],
+                ['Inactivos', $totales['inactivos'], 'estado=inactivos'],
                 ['Pueden entrar al sitio', $totales['con_web'], 'acceso=puede_entrar'],
                 ['Ya entraron al sitio', $totales['entraron'], 'acceso=entraron'],
             ];
@@ -41,7 +41,6 @@
                 <label class="f-label" for="vendedor">Vendedor</label>
                 <select id="vendedor" name="vendedor" class="f-input">
                     <option value="0">Todos</option>
-                    <option value="-1" @selected($filtros['vendedor'] === -1)>Sin vendedor</option>
                     @foreach($vendedores as $v)
                         <option value="{{ $v->id }}" @selected($filtros['vendedor'] === $v->id)>{{ $v->name }}</option>
                     @endforeach

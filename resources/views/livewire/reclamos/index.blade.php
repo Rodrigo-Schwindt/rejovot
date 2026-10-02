@@ -10,6 +10,33 @@
 @endphp
 <div class="animate-fadeIn space-y-6">
 
+    {{-- A dónde llega cada reclamo nuevo. --}}
+    <form method="POST" action="{{ route('admin.reclamos.mail') }}"
+          class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+        @csrf
+        <span class="sec-label">Aviso por mail</span>
+        <p class="mt-2 text-sm text-slate-500">
+            Cada reclamo nuevo se manda a esta casilla, con las fotos adjuntas. También les llega al cliente y a su vendedor.
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-end gap-3">
+            <div class="min-w-[280px] flex-1">
+                <label class="f-label" for="mail_reclamos">Casilla que recibe los reclamos</label>
+                <input type="email" id="mail_reclamos" name="mail_reclamos" class="f-input"
+                       value="{{ old('mail_reclamos', $contacto?->mail_reclamos) }}"
+                       placeholder="{{ $contacto?->mail_adm ?: 'reclamos@rejovot.com.ar' }}">
+                @error('mail_reclamos')<p class="mt-1 text-xs text-[#E11A22]">{{ $message }}</p>@enderror
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+
+        @unless($contacto?->mail_reclamos)
+            <p class="mt-2 text-xs text-slate-400">
+                Vacío: hoy los reclamos van al mail de contacto ({{ $contacto?->mail_adm ?: 'sin cargar' }}).
+            </p>
+        @endunless
+    </form>
+
     <div>
         <h2 class="text-xl font-semibold text-slate-800">
             Reclamos <span class="text-base font-normal text-slate-400">({{ $reclamos->total() }})</span>

@@ -10,9 +10,6 @@
         </h2>
         <p class="mt-1 text-sm text-slate-500">
             Vienen de Odoo con su cartera de clientes. Un vendedor sólo puede comprar para clientes de su cartera.
-            @if($sinVendedor > 0)
-                Hay <a href="{{ route('admin.clientes.index', ['vendedor' => -1]) }}" class="font-semibold text-[#0D2B5E] underline">{{ number_format($sinVendedor, 0, ',', '.') }} clientes activos sin vendedor</a>.
-            @endif
         </p>
     </div>
 

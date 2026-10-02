@@ -4,10 +4,12 @@ namespace App\Livewire\Vistas\Carrito;
 
 use App\Livewire\Vistas\Productos\ProductosPage;
 use App\Services\Carrito\Carrito;
+use App\Services\Catalogo\RefrescoEnVivo;
 use App\Services\Odoo\OdooEnvios;
 use App\Services\Odoo\OdooException;
 use App\Services\Pedidos\EnviarPedido;
 use App\Services\Sesion\ClienteActivo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -23,10 +25,29 @@ class CarritoPage extends Component
 
     public string $mensaje = '';
 
+    /** Para notar cambios hechos desde otra sesión del mismo cliente. */
+    public string $firma = '';
+
     public function mount(Carrito $carrito, OdooEnvios $envios): void
     {
         $this->sincronizarCantidades($carrito);
         $this->entrega ??= $envios->porDefecto()['id'] ?? null;
+    }
+
+    /**
+     * Cada tanto (wire:poll) se fija si otra persona que opera este cliente
+     * agregó, cambió o envió algo. Si no cambió nada, no se redibuja.
+     */
+    public function sincronizar(Carrito $carrito): void
+    {
+        if ($carrito->firma() === $this->firma) {
+            $this->skipRender();
+
+            return;
+        }
+
+        $this->sincronizarCantidades($carrito);
+        $this->dispatch('show-toast', message: 'El carrito se actualizó desde otra sesión de este cliente.', type: 'success');
     }
 
     /** Livewire avisa qué clave del array cambió. */
@@ -60,7 +81,7 @@ class CarritoPage extends Component
         $this->dispatch('show-toast', message: 'Se vació el carrito.', type: 'success');
     }
 
-    /** Manda el carrito a Odoo como presupuesto y lleva a Mis Pedidos. */
+    /** Manda el carrito a Odoo (se confirma si la cuenta corriente está bien) y lleva a Mis Pedidos. */
     public function realizarPedido(Carrito $carrito, ClienteActivo $clienteActivo, OdooEnvios $envios, EnviarPedido $enviar)
     {
         if (! $clienteActivo->puedeOperar()) {
@@ -77,8 +98,29 @@ class CarritoPage extends Component
 
         $envio = $this->entrega ? $envios->porId($this->entrega) : $envios->porDefecto();
 
+        // El carrito es compartido: si dos personas tocan «Realizar pedido» a la
+        // vez, una lo envía y la otra se entera, en vez de mandarlo dos veces.
+        $lock = Cache::lock('pedido-cliente-' . $clienteActivo->actual()->id, 120);
+
+        if (! $lock->get()) {
+            $this->dispatch('show-toast', message: 'Otra persona está enviando el pedido de este cliente en este momento.', type: 'error');
+
+            return null;
+        }
+
         try {
+            // Puede haberlo enviado otra sesión mientras esta miraba el carrito.
+            if ($carrito->firma() !== $this->firma) {
+                $this->sincronizarCantidades($carrito);
+                $this->dispatch('show-toast', message: 'El carrito cambió desde otra sesión: revisalo antes de enviar.', type: 'error');
+
+                return null;
+            }
+
             $pedido = $enviar->desdeCarrito($carrito, $envio, $this->mensaje);
+
+            // Lo sin stock sigue en el carrito para cuando ingrese.
+            $carrito->quitarVarios($pedido['enviados']);
         } catch (\RuntimeException $e) {
             $this->dispatch('show-toast', message: $e->getMessage(), type: 'error');
 
@@ -89,10 +131,10 @@ class CarritoPage extends Component
             $this->dispatch('show-toast', message: 'No pudimos enviar el pedido. Probá de nuevo en un momento.', type: 'error');
 
             return null;
+        } finally {
+            $lock->release();
         }
 
-        // Lo sin stock sigue en el carrito para cuando ingrese.
-        $carrito->quitarVarios($pedido['enviados']);
         $this->mensaje = '';
 
         $quedan = count($pedido['quedan']);
@@ -107,8 +149,13 @@ class CarritoPage extends Component
         return $this->redirect(route('pedidos'), navigate: true);
     }
 
-    public function render(Carrito $carrito, OdooEnvios $envios)
+    public function render(Carrito $carrito, OdooEnvios $envios, RefrescoEnVivo $refresco)
     {
+        // Precio, stock y publicado de lo cargado, recién leídos de Odoo: es
+        // donde se decide la compra. Cada producto se consulta a lo sumo cada
+        // 30 segundos, así que redibujar seguido no le pega a Odoo cada vez.
+        $refresco->codigos($carrito->codigos());
+
         $seleccionado = $this->entrega ? $envios->porId($this->entrega) : $envios->porDefecto();
 
         return view('livewire.vistas.carrito.carrito-page', [
@@ -127,6 +174,7 @@ class CarritoPage extends Component
 
     private function sincronizarCantidades(Carrito $carrito): void
     {
+        $this->firma = $carrito->firma();
         $this->cantidades = collect($carrito->items())
             ->mapWithKeys(fn (array $item) => [
                 ProductosPage::clave($item['producto']['codigo']) => $item['cantidad'],

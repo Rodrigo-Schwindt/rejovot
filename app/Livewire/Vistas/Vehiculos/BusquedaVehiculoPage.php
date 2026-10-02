@@ -3,6 +3,7 @@
 namespace App\Livewire\Vistas\Vehiculos;
 
 use App\Contracts\CatalogoRepository;
+use App\Services\Catalogo\RefrescoEnVivo;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -57,7 +58,7 @@ class BusquedaVehiculoPage extends Component
         $this->resetPage();
     }
 
-    public function render(CatalogoRepository $catalogo)
+    public function render(CatalogoRepository $catalogo, RefrescoEnVivo $refresco)
     {
         $marcas = $catalogo->filtros()['marcas'];
 
@@ -74,14 +75,21 @@ class BusquedaVehiculoPage extends Component
             ));
         }
 
+        $productos = null;
+
+        if ($this->marca !== '') {
+            $filtros = ['marca' => $this->marca, 'q' => trim($this->q)];
+            $productos = $catalogo->paginados($filtros, $this->porPagina);
+
+            // La página que se ve, recién leída de Odoo (ver ProductosPage).
+            if ($refresco->codigos(array_column($productos->items(), 'codigo'))) {
+                $productos = $catalogo->paginados($filtros, $this->porPagina);
+            }
+        }
+
         return view('livewire.vistas.vehiculos.busqueda-vehiculo-page', [
             'marcas' => $marcas,
-            'productos' => $this->marca !== ''
-                ? $catalogo->paginados([
-                    'marca' => $this->marca,
-                    'q' => trim($this->q),
-                ], $this->porPagina)
-                : null,
+            'productos' => $productos,
         ]);
     }
 }

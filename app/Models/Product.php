@@ -31,6 +31,10 @@ class Product extends Model
         'discount_from',
         'discount_to',
         'odoo_write_date',
+        // SEO a mano; vacío = la metadata automática (ver ProductoSeo).
+        'seo_title',
+        'seo_description',
+        'seo_keywords',
     ];
 
     protected function casts(): array

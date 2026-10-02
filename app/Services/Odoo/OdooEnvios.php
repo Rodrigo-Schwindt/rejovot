@@ -12,7 +12,7 @@ class OdooEnvios
 {
     private const CACHE_KEY = 'odoo:envios';
 
-    private const CACHE_MINUTOS = 60;
+    private const CACHE_MINUTOS = 5;
 
     public function __construct(protected OdooClient $odoo)
     {

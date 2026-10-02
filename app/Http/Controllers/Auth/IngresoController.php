@@ -43,8 +43,11 @@ class IngresoController extends Controller
             ])->withInput($request->only('login'));
         }
 
+        // El login de Laravel rota el token de formularios; se conserva porque el
+        // sitio comparte sesión con el admin (ver LoginController).
+        $token = $request->session()->token();
         Auth::guard('sitio')->login($usuario, $request->boolean('remember'));
-        $request->session()->regenerate();
+        $request->session()->put('_token', $token);
 
         return redirect()->intended(route('productos'));
     }
@@ -55,7 +58,8 @@ class IngresoController extends Controller
 
         // Sólo se cierra la sesión del sitio: la del panel, si la hay, sigue.
         Auth::guard('sitio')->logout();
-        $request->session()->regenerate();
+        // Id nuevo sin rotar el token: no rompe formularios de otras pestañas.
+        $request->session()->migrate(true);
 
         // Se queda en el catálogo: para volver a entrar está el modal del header.
         return redirect()->route('productos');

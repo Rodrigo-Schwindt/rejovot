@@ -5,12 +5,12 @@
 
     <div class="flex items-center justify-between">
         <h2 class="text-xl font-semibold text-slate-800">Editar usuario</h2>
-        <a href="{{ route('usuarios.index') }}" class="btn btn-ghost btn-sm">Volver</a>
+        <a href="{{ route('admin.usuarios.index') }}" class="btn btn-ghost btn-sm">Volver</a>
     </div>
 
     @if($errors->any())<div class="alert-error"><ul class="list-disc pl-5">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
 
-    <form method="POST" action="{{ route('usuarios.update', $user) }}" class="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+    <form method="POST" action="{{ route('admin.usuarios.update', $user) }}" class="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
         @csrf @method('PUT')
 
         <div>
@@ -39,7 +39,7 @@
         </div>
 
         <div class="flex justify-end gap-2">
-            <a href="{{ route('usuarios.index') }}" class="btn btn-ghost">Cancelar</a>
+            <a href="{{ route('admin.usuarios.index') }}" class="btn btn-ghost">Cancelar</a>
             <button type="submit" class="btn btn-primary px-8">Guardar cambios</button>
         </div>
     </form>

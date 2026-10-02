@@ -12,8 +12,12 @@ use App\Models\Customer;
 class Destinatarios
 {
     /** @return array<int, string> */
-    public static function delCliente(Customer $cliente, bool $conVendedor = true, bool $conAdmin = true): array
-    {
+    public static function delCliente(
+        Customer $cliente,
+        bool $conVendedor = true,
+        bool $conAdmin = true,
+        ?string $casillaAdmin = null,
+    ): array {
         $mails = [$cliente->email];
 
         if ($conVendedor) {
@@ -21,7 +25,8 @@ class Destinatarios
         }
 
         if ($conAdmin) {
-            $mails[] = Contact::first()?->mail_adm;
+            // Cada aviso puede tener su casilla (reclamos, comprobantes); si no, la de contacto.
+            $mails[] = $casillaAdmin ?: Contact::first()?->mail_adm;
         }
 
         return array_values(array_unique(array_filter(

@@ -95,11 +95,12 @@ class GenerarListaPrecios extends Command
 
         $pdf = new PdfTabla($rutaPdf, 'Lista de precios · Rejovot Autopartes',
             'Actualizada el ' . now()->format('d/m/Y') . ' · Precios sin IVA', [
-                ['titulo' => 'Código', 'ancho' => 90.0],
-                ['titulo' => 'Descripción', 'ancho' => 420.0],
-                ['titulo' => 'Marca', 'ancho' => 100.0],
-                ['titulo' => 'Rubro', 'ancho' => 158.0],
-                ['titulo' => 'Precio', 'ancho' => 34.0 + 40.0, 'alineacion' => 'derecha'],
+                // Suman 802: el ancho de la hoja apaisada menos los márgenes.
+                ['titulo' => 'Código', 'ancho' => 88.0],
+                ['titulo' => 'Descripción', 'ancho' => 384.0],
+                ['titulo' => 'Marca', 'ancho' => 96.0],
+                ['titulo' => 'Rubro', 'ancho' => 154.0],
+                ['titulo' => 'Precio', 'ancho' => 80.0, 'alineacion' => 'derecha'],
             ]);
 
         $filas = 0;

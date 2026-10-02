@@ -42,7 +42,7 @@
     <div class="flex flex-1 flex-col px-5 pb-[20px]">
         <a wire:navigate href="{{ route('producto', ['codigo' => $producto['codigo']]) }}"
            onclick="event.stopPropagation()"
-           class="mt-[16px] block text-[12px] font-bold text-[#002B56] hover:underline">{{ $producto['codigo'] }}</a>
+           class="mt-[16px] block text-[14px] font-bold text-[#002B56] hover:underline">{{ $producto['codigo'] }}</a>
 
         <span class="mt-1 block" onclick="event.stopPropagation()">
             @include('livewire.vistas.productos.partials.badge-relacion', ['producto' => $producto])

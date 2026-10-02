@@ -4,9 +4,11 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\Catalogo\OfertasEnVivo;
 use App\Services\Odoo\OdooCatalog;
 use App\Services\Odoo\OdooException;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -71,6 +73,9 @@ class SyncOdooOfertas extends Command
                 }
             }
         });
+
+        // Para que la web note al instante el próximo cambio (OfertasEnVivo).
+        Cache::forever(OfertasEnVivo::CLAVE_FIRMA, OfertasEnVivo::firma($reglas));
 
         $this->info('  Productos con descuento: ' . number_format(count($porProducto), 0, ',', '.'));
         $this->info('  Con oferta vigente hoy: ' . number_format(Product::enOferta()->count(), 0, ',', '.'));

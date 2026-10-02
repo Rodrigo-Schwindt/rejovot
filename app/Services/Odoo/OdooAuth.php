@@ -56,10 +56,18 @@ class OdooAuth
         return is_int($uid) && $uid > 0 ? $uid : null;
     }
 
-    /** Usuario interno de Odoo: es un vendedor. */
+    /**
+     * Usuario interno de Odoo. Entra como vendedor sólo si Rejovot lo tiene
+     * como tal (GERENCIA o «VENDEDOR n»): administración, compras, pagos, etc.
+     * son usuarios internos pero no venden.
+     */
     protected function comoVendedor(int $uid, array $datos): ?User
     {
-        $vendedor = Salesperson::firstOrCreate(
+        if (! Salesperson::esVendedor((string) $datos['name'])) {
+            return null;
+        }
+
+        $vendedor = Salesperson::updateOrCreate(
             ['odoo_id' => $uid],
             ['name' => $datos['name'], 'login' => $datos['login'], 'active' => true],
         );

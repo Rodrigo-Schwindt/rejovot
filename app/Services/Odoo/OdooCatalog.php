@@ -48,35 +48,48 @@ class OdooCatalog
         return $this->odoo->searchRead('product.category', [], ['name', 'complete_name', 'parent_id']);
     }
 
-    /** Una página de productos, opcionalmente sólo los modificados desde $since. */
-    public function productsPage(?string $since, int $offset, int $limit = 500): array
+    /** Campos de producto que guarda el catálogo local. */
+    protected const CAMPOS_PRODUCTO = [
+        'id',
+        'product_tmpl_id',
+        'default_code',
+        'name',
+        'oem_code',
+        // Almacenable / consumible / servicio.
+        'type',
+        // Imágenes adicionales (product.image); la principal sale del template.
+        'product_template_image_ids',
+        'categ_id',
+        'qty_available',
+        // Es el precio de lista público y coincide con el de la tarifa.
+        'lst_price_with_margin',
+        // «Impuestos cliente»: define el IVA de la línea.
+        'taxes_id',
+        'active',
+        'website_published',
+        'write_date',
+    ];
+
+    /**
+     * Lo modificado desde $since. Publicado, activo y precio de lista viven en
+     * la plantilla (product.template): al despublicar o cambiar el precio sólo
+     * cambia la fecha de la plantilla, no la de la variante. Se miran las dos.
+     */
+    protected function dominioCambios(?string $since): array
     {
         $domain = $this->dominioBase();
 
         if ($since) {
-            $domain[] = ['write_date', '>', $since];
+            array_push($domain, '|', ['write_date', '>', $since], ['product_tmpl_id.write_date', '>', $since]);
         }
 
-        return $this->odoo->searchRead('product.product', $domain, [
-            'id',
-            'product_tmpl_id',
-            'default_code',
-            'name',
-            'oem_code',
-            // Almacenable / consumible / servicio.
-            'type',
-            // Imágenes adicionales (product.image); la principal sale del template.
-            'product_template_image_ids',
-            'categ_id',
-            'qty_available',
-            // Es el precio de lista público y coincide con el de la tarifa.
-            'lst_price_with_margin',
-            // «Impuestos cliente»: define el IVA de la línea.
-            'taxes_id',
-            'active',
-            'website_published',
-            'write_date',
-        ], [
+        return $domain;
+    }
+
+    /** Una página de productos, opcionalmente sólo los modificados desde $since. */
+    public function productsPage(?string $since, int $offset, int $limit = 500): array
+    {
+        return $this->odoo->searchRead('product.product', $this->dominioCambios($since), self::CAMPOS_PRODUCTO, [
             'offset' => $offset,
             'limit' => $limit,
             'order' => 'write_date asc, id asc',
@@ -84,15 +97,55 @@ class OdooCatalog
         ]);
     }
 
-    public function productsCount(?string $since): int
+    /** Productos completos por id (los que faltan en la base local). */
+    public function productsByIds(array $ids): array
     {
-        $domain = $this->dominioBase();
-
-        if ($since) {
-            $domain[] = ['write_date', '>', $since];
+        if (! $ids) {
+            return [];
         }
 
-        return (int) $this->odoo->call('product.product', 'search_count', [$domain], [
+        return $this->odoo->searchRead('product.product', [...$this->dominioBase(), ['id', 'in', array_values($ids)]], self::CAMPOS_PRODUCTO, [
+            'context' => ['active_test' => false] + $this->contextoStock(),
+        ]);
+    }
+
+    /** @return array<int, string> id de plantilla => write_date */
+    public function fechasPlantillas(array $tmplIds): array
+    {
+        if (! $tmplIds) {
+            return [];
+        }
+
+        $rows = $this->odoo->call('product.template', 'read', [array_values(array_unique($tmplIds)), ['write_date']], [
+            'context' => ['active_test' => false],
+        ]);
+
+        return collect($rows)->pluck('write_date', 'id')->all();
+    }
+
+    /**
+     * Lo que cambia sin dejar rastro en la fecha de modificación: el precio se
+     * calcula al leerlo (costo, margen, cotización) y el stock sale de los
+     * movimientos. Página liviana, ordenada por id, para releer todo seguido.
+     */
+    public function estadosPage(int $offset, int $limit = 2000): array
+    {
+        return $this->odoo->searchRead('product.product', $this->dominioBase(), [
+            'lst_price_with_margin',
+            'qty_available',
+            'active',
+            'website_published',
+        ], [
+            'offset' => $offset,
+            'limit' => $limit,
+            'order' => 'id asc',
+            'context' => ['active_test' => false] + $this->contextoStock(),
+        ]);
+    }
+
+    public function productsCount(?string $since): int
+    {
+        return (int) $this->odoo->call('product.product', 'search_count', [$this->dominioCambios($since)], [
             'context' => ['active_test' => false],
         ]);
     }

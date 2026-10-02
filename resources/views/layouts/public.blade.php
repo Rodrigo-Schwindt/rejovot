@@ -46,7 +46,7 @@
 
         $navItems = [
             ['label' => 'Productos', 'route' => 'productos', 'activo' => request()->routeIs('producto') && ! $desdeVehiculos],
-            ['label' => 'Búsqueda por vehículo', 'route' => 'vehiculos', 'activo' => $desdeVehiculos],
+            ['label' => 'Búsqueda por marca', 'route' => 'vehiculos', 'activo' => $desdeVehiculos],
             ['label' => 'Carrito', 'route' => 'carrito', 'privada' => true],
             ['label' => 'Mis Pedidos', 'route' => 'pedidos', 'privada' => true],
             ['label' => 'Lista de precios', 'route' => 'precios'],

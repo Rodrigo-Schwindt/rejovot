@@ -36,7 +36,7 @@
     <td class="px-2 py-3">
         <a wire:navigate href="{{ route('producto', ['codigo' => $producto['codigo']]) }}"
            onclick="event.stopPropagation()"
-           class="block text-[13px] text-[#0D2B5E] hover:underline">{{ $producto['codigo'] }}</a>
+           class="block text-[15px] font-bold text-[#0D2B5E] hover:underline">{{ $producto['codigo'] }}</a>
         <a wire:navigate href="{{ route('producto', ['codigo' => $producto['codigo']]) }}"
            onclick="event.stopPropagation()"
            class="mt-0.5 line-clamp-3 w-[190px] max-w-[190px] text-[15px] uppercase leading-[125%] text-black transition hover:text-[#002B56]"
@@ -81,7 +81,6 @@
 
     <td class="px-2 py-3 text-right whitespace-nowrap">
         <span class="block text-[15px] text-black">{{ Precio::ar($producto['precio_venta'] * $cantidad) }}</span>
-        <span class="block text-[13px] text-slate-500">(Markup {{ $producto['markup'] }}%)</span>
     </td>
 
     <td class="w-[48px] px-1 py-3 text-center">

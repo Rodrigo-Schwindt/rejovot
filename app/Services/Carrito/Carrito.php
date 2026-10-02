@@ -5,12 +5,18 @@ namespace App\Services\Carrito;
 use App\Contracts\CatalogoRepository;
 use App\Services\Margenes\Margenes;
 use App\Services\Odoo\OdooEnvios;
+use App\Services\Sesion\ClienteActivo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 /**
- * Carrito guardado en sesión. Los productos se resuelven contra
- * CatalogoRepository; al confirmar, `EnviarPedido` lo convierte en un
- * pedido de Odoo (sale.order).
+ * Carrito del cliente activo. Es **uno por cliente** y vive en la base: el
+ * vendedor y el cliente, o el cliente desde varios dispositivos, operan el
+ * mismo carrito y ven lo que agrega o envía el otro. Sólo sin cliente elegido
+ * queda en la sesión del navegador.
+ *
+ * Los productos se resuelven contra CatalogoRepository; al confirmar,
+ * `EnviarPedido` lo convierte en un pedido de Odoo (sale.order).
  */
 class Carrito
 {
@@ -19,6 +25,7 @@ class Carrito
     public function __construct(
         private CatalogoRepository $catalogo,
         private Margenes $margenes,
+        private ClienteActivo $clienteActivo,
     ) {
     }
 
@@ -62,48 +69,97 @@ class Carrito
 
     public function agregar(string $codigo, int $cantidad = 1): void
     {
-        $lineas = $this->lineas();
-        $lineas[$codigo] = ($lineas[$codigo] ?? 0) + max(1, $cantidad);
+        $cantidad = max(1, $cantidad);
 
-        $this->guardar($lineas);
+        if ($cliente = $this->clienteId()) {
+            // Suma en una sola sentencia: si dos personas agregan el mismo
+            // producto a la vez, no se pisa ninguna de las dos cantidades.
+            DB::statement(
+                'insert into cart_items (customer_id, codigo, cantidad, created_at, updated_at) values (?, ?, ?, ?, ?)
+                 on duplicate key update cantidad = cantidad + values(cantidad), updated_at = values(updated_at)',
+                [$cliente, $codigo, $cantidad, now(), now()],
+            );
+
+            return;
+        }
+
+        $lineas = $this->lineas();
+        $lineas[$codigo] = ($lineas[$codigo] ?? 0) + $cantidad;
+
+        Session::put(self::SESSION_KEY, $lineas);
     }
 
     public function actualizar(string $codigo, int $cantidad): void
     {
-        $lineas = $this->lineas();
+        $cantidad = max(1, $cantidad);
 
-        if (! isset($lineas[$codigo])) {
+        if ($cliente = $this->clienteId()) {
+            DB::table('cart_items')
+                ->where('customer_id', $cliente)
+                ->where('codigo', $codigo)
+                ->update(['cantidad' => $cantidad, 'updated_at' => now()]);
+
             return;
         }
 
-        $lineas[$codigo] = max(1, $cantidad);
+        $lineas = $this->lineas();
 
-        $this->guardar($lineas);
+        if (isset($lineas[$codigo])) {
+            $lineas[$codigo] = $cantidad;
+            Session::put(self::SESSION_KEY, $lineas);
+        }
     }
 
     public function quitar(string $codigo): void
     {
-        $lineas = $this->lineas();
-        unset($lineas[$codigo]);
-
-        $this->guardar($lineas);
+        $this->quitarVarios([$codigo]);
     }
 
     /** @param  array<int, string>  $codigos */
     public function quitarVarios(array $codigos): void
     {
+        if ($cliente = $this->clienteId()) {
+            DB::table('cart_items')
+                ->where('customer_id', $cliente)
+                ->whereIn('codigo', $codigos)
+                ->delete();
+
+            return;
+        }
+
         $lineas = $this->lineas();
 
         foreach ($codigos as $codigo) {
             unset($lineas[$codigo]);
         }
 
-        $this->guardar($lineas);
+        Session::put(self::SESSION_KEY, $lineas);
     }
 
     public function vaciar(): void
     {
-        $this->guardar([]);
+        if ($cliente = $this->clienteId()) {
+            DB::table('cart_items')->where('customer_id', $cliente)->delete();
+
+            return;
+        }
+
+        Session::forget(self::SESSION_KEY);
+    }
+
+    /**
+     * Huella del contenido. Las pantallas abiertas la comparan cada tanto para
+     * enterarse de lo que cambió otra persona en el mismo carrito.
+     */
+    public function firma(): string
+    {
+        return md5(json_encode($this->lineas()));
+    }
+
+    /** @return array<int, string> códigos de los productos cargados */
+    public function codigos(): array
+    {
+        return array_map('strval', array_keys($this->lineas()));
     }
 
     public function cantidadTotal(): int
@@ -185,14 +241,42 @@ class Carrito
         ];
     }
 
-    /** @return array<string, int> */
+    /** @return array<string, int> código => cantidad, en el orden en que se agregaron */
     private function lineas(): array
     {
-        return Session::get(self::SESSION_KEY, []);
+        if (! $cliente = $this->clienteId()) {
+            return Session::get(self::SESSION_KEY, []);
+        }
+
+        $this->pasarCarritoDeSesion($cliente);
+
+        return DB::table('cart_items')
+            ->where('customer_id', $cliente)
+            ->orderBy('id')
+            ->pluck('cantidad', 'codigo')
+            ->map(fn ($cantidad) => (int) $cantidad)
+            ->all();
     }
 
-    private function guardar(array $lineas): void
+    private function clienteId(): ?int
     {
-        Session::put(self::SESSION_KEY, $lineas);
+        return $this->clienteActivo->actual()?->id;
+    }
+
+    /**
+     * Lo que haya quedado en el carrito de sesión (de antes de que fuera
+     * compartido) se suma al del cliente una sola vez.
+     */
+    private function pasarCarritoDeSesion(int $cliente): void
+    {
+        if (! Session::has(self::SESSION_KEY)) {
+            return;
+        }
+
+        $viejo = Session::pull(self::SESSION_KEY, []);
+
+        foreach ($viejo as $codigo => $cantidad) {
+            $this->agregar((string) $codigo, (int) $cantidad);
+        }
     }
 }

@@ -13,11 +13,16 @@ use Illuminate\Support\Facades\Http;
  */
 class OdooCuenta
 {
-    /** Apuntes de la cuenta por cobrar que todavía tienen saldo. */
+    /**
+     * Apuntes de la cuenta por cobrar que todavía tienen saldo, sólo de
+     * Rejovot: en la base hay otras compañías (PRUEBA, BENEIBRAK…) con sus
+     * propios comprobantes («INV/2026/…») que no son la cuenta del cliente acá.
+     */
     protected function dominio(int $partnerId): array
     {
         return [
             ['partner_id', '=', $partnerId],
+            ['company_id', '=', config('odoo.company_id')],
             ['account_id.internal_type', '=', 'receivable'],
             ['parent_state', '=', 'posted'],
             ['amount_residual', '!=', 0],
@@ -127,11 +132,14 @@ class OdooCuenta
      */
     public function comprobantePdf(int $moveId, int $partnerId): ?array
     {
-        $rows = $this->odoo->read('account.move', [$moveId], ['name', 'access_token', 'partner_id']);
+        $rows = $this->odoo->read('account.move', [$moveId], ['name', 'access_token', 'partner_id', 'company_id']);
         $move = $rows[0] ?? null;
 
-        // Nadie puede bajarse el comprobante de otro cliente.
-        if (! $move || ($move['partner_id'][0] ?? null) !== $partnerId || empty($move['access_token'])) {
+        // Nadie puede bajarse el comprobante de otro cliente ni de otra compañía.
+        if (! $move
+            || ($move['partner_id'][0] ?? null) !== $partnerId
+            || ($move['company_id'][0] ?? null) !== config('odoo.company_id')
+            || empty($move['access_token'])) {
             return null;
         }
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Cuenta\ComprobantesController as CuentaComprobantesCont
 use App\Http\Controllers\Clientes\ClientesAdminController;
 use App\Http\Controllers\Reclamos\FotoReclamoController;
 use App\Http\Controllers\Reclamos\ReclamosAdminController;
+use App\Http\Controllers\Seo\SitemapController;
 use App\Livewire\Vistas\Reclamos\NuevoReclamoPage;
 use App\Livewire\Vistas\Reclamos\ReclamoDetallePage;
 use App\Livewire\Vistas\Reclamos\ReclamosPage;
@@ -37,8 +38,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', fn () => redirect()->route('productos'))->name('home');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/productos', ProductosPage::class)->name('productos');
-Route::get('/productos/{codigo}', ProductoDetallePage::class)->name('producto');
+// Hay códigos con barra («6246/FF.0321»): el parámetro toma el resto de la URL.
+Route::get('/productos/{codigo}', ProductoDetallePage::class)->where('codigo', '.+')->name('producto');
 Route::get('/busqueda-por-vehiculo', BusquedaVehiculoPage::class)->name('vehiculos');
 // Sólo con sesión del sitio: sin cliente o vendedor no hay nada que mostrar.
 Route::middleware('auth:sitio')->group(function () {
@@ -96,6 +99,8 @@ Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function
     Route::patch('/productos/{producto}/ocultar', [ProductosAdminController::class, 'ocultar'])->name('admin.catalogo.ocultar');
     Route::patch('/productos/{producto}/destacar', [ProductosAdminController::class, 'destacar'])->name('admin.catalogo.destacar');
     Route::post('/productos/destacados/limpiar', [ProductosAdminController::class, 'limpiarDestacados'])->name('admin.catalogo.destacados.limpiar');
+    Route::get('/productos/{producto}/seo', [ProductosAdminController::class, 'seo'])->name('admin.catalogo.seo');
+    Route::patch('/productos/{producto}/seo', [ProductosAdminController::class, 'guardarSeo'])->name('admin.catalogo.seo.guardar');
 
     Route::get('/contacto', [ContactManager::class, 'index'])->name('admin.contacto');
     Route::post('/contacto', [ContactManager::class, 'save'])->name('admin.contacto.save');
@@ -117,6 +122,7 @@ Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function
     Route::get('/vendedores/{vendedor}', [VendedoresAdminController::class, 'show'])->name('admin.vendedores.show');
 
     Route::get('/reclamos', [ReclamosAdminController::class, 'index'])->name('admin.reclamos.index');
+    Route::post('/reclamos/mail', [ReclamosAdminController::class, 'guardarMail'])->name('admin.reclamos.mail');
     Route::get('/reclamos/{reclamo}', [ReclamosAdminController::class, 'show'])->name('admin.reclamos.show');
     Route::patch('/reclamos/{reclamo}', [ReclamosAdminController::class, 'update'])->name('admin.reclamos.update');
     Route::get('/reclamos/{reclamo}/fotos/{foto}', [FotoReclamoController::class, 'admin'])->name('admin.reclamos.foto');
@@ -134,5 +140,12 @@ Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function
     Route::post('/metadata', [MetadataCrud::class, 'save'])->name('admin.metadata.save');
     Route::delete('/metadata/{metadata}', [MetadataCrud::class, 'delete'])->name('admin.metadata.delete');
 
-    Route::resource('usuarios', UsuariosController::class)->except('show');
+    // Una por una y no con Route::resource: ese se registra recién al destruirse
+    // el objeto, y en el PHP 8.5 de producción las rutas no quedaban cargadas.
+    Route::get('/usuarios', [UsuariosController::class, 'index'])->name('admin.usuarios.index');
+    Route::get('/usuarios/create', [UsuariosController::class, 'create'])->name('admin.usuarios.create');
+    Route::post('/usuarios', [UsuariosController::class, 'store'])->name('admin.usuarios.store');
+    Route::get('/usuarios/{usuario}/edit', [UsuariosController::class, 'edit'])->name('admin.usuarios.edit');
+    Route::match(['put', 'patch'], '/usuarios/{usuario}', [UsuariosController::class, 'update'])->name('admin.usuarios.update');
+    Route::delete('/usuarios/{usuario}', [UsuariosController::class, 'destroy'])->name('admin.usuarios.destroy');
 });

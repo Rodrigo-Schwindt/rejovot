@@ -1,2 +1,12 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /login
+Disallow: /ingresar
+Disallow: /carrito
+Disallow: /mis-pedidos
+Disallow: /estado-de-cuenta
+Disallow: /info-de-pagos
+Disallow: /reclamos
+Disallow: /margenes
+
+Sitemap: https://rejovot.com.ar/sitemap.xml

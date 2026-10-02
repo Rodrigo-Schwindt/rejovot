@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\Catalogo\GuardarProductos;
 use App\Services\Odoo\OdooCatalog;
 use App\Services\Odoo\OdooException;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class SyncOdooCatalog extends Command
 {
@@ -106,87 +106,7 @@ class SyncOdooCatalog extends Command
     /** Guarda una página de productos. El costo de Rejovot no se sincroniza. */
     protected function guardarPagina(array $rows): void
     {
-        $categorias = $this->mapaCategorias();
-
-        DB::transaction(function () use ($rows, $categorias) {
-            foreach ($rows as $row) {
-                $tmplId = $row['product_tmpl_id'][0] ?? null;
-                $categoriaOdoo = $row['categ_id'][0] ?? null;
-
-                try {
-                    Product::updateOrCreate(['odoo_id' => $row['id']], [
-                        'odoo_tmpl_id' => $tmplId,
-                        // Hay un producto con un texto largo cargado como código.
-                        'code' => $this->recortar($row['default_code'], 120),
-                        'name' => $row['name'],
-                        'oem_codes' => $row['oem_code'] ?: null,
-                        'type' => $row['type'] ?: null,
-                        'extra_image_ids' => $row['product_template_image_ids'] ?: null,
-                        'category_id' => $categorias[$categoriaOdoo] ?? null,
-                        // lst_price_with_margin ya es el precio de la tarifa pública.
-                        'list_price' => $row['lst_price_with_margin'] ?? 0,
-                        'tax_percent' => $this->iva($row['taxes_id'] ?? []),
-                        'stock' => $row['qty_available'] ?? 0,
-                        'active' => (bool) $row['active'],
-                        'published' => (bool) $row['website_published'],
-                        'odoo_write_date' => $row['write_date'],
-                    ]);
-                } catch (\Throwable $e) {
-                    // Una fila rara no puede cortar una sincronización de 55k.
-                    $this->fallidos[] = $row['id'] . ': ' . $e->getMessage();
-                }
-            }
-        });
-    }
-
-    /**
-     * IVA del producto. Los impuestos son varios (IVA y percepciones); las
-     * percepciones están en 0, así que sumar los porcentuales da el IVA.
-     */
-    protected function iva(array $taxIds): float
-    {
-        $tasas = $this->tasas();
-        $total = 0.0;
-
-        foreach ($taxIds as $id) {
-            $total += $tasas[$id] ?? 0;
-        }
-
-        return $total > 0 ? $total : 21.0;
-    }
-
-    /** @return array<int, float> id de impuesto => porcentaje */
-    protected function tasas(): array
-    {
-        static $tasas = null;
-
-        if ($tasas !== null) {
-            return $tasas;
-        }
-
-        $rows = app(OdooCatalog::class)->impuestosDeVenta();
-
-        return $tasas = collect($rows)->pluck('amount', 'id')->map(fn ($v) => (float) $v)->all();
-    }
-
-    /** Recorta un valor de Odoo al largo que soporta la columna. */
-    protected function recortar($valor, int $largo): ?string
-    {
-        $valor = trim((string) ($valor ?: ''));
-
-        if ($valor === '') {
-            return null;
-        }
-
-        return mb_substr($valor, 0, $largo);
-    }
-
-    /** @return array<int, int> odoo_id => id local */
-    protected function mapaCategorias(): array
-    {
-        static $mapa = null;
-
-        return $mapa ??= Category::pluck('id', 'odoo_id')->all();
+        $this->fallidos = [...$this->fallidos, ...app(GuardarProductos::class)->guardar($rows)];
     }
 
     protected function syncCategories(OdooCatalog $catalog): void
