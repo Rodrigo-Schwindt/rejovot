@@ -17,6 +17,7 @@ class Contact extends Model
         'mail_adm',
         'mail_comprobantes',
         'mail_reclamos',
+        'avisar_pedidos',
         'wssp',
         'maps_adm',
         'frame_adm',
@@ -41,6 +42,12 @@ class Contact extends Model
     }
 
     /** Casilla que recibe los reclamos. Sin una propia, van al mail de contacto. */
+    /** Si se manda el mail de cada pedido (lo prende o apaga el admin en Contacto). */
+    public static function avisaPedidos(): bool
+    {
+        return (bool) (static::first()?->avisar_pedidos ?? true);
+    }
+
     public static function mailReclamos(): ?string
     {
         $contacto = static::first();

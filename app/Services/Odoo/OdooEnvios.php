@@ -23,7 +23,7 @@ class OdooEnvios
      */
     public function disponibles(): array
     {
-        return Cache::remember(self::CACHE_KEY, now()->addMinutes(self::CACHE_MINUTOS), function () {
+        return self::preferidoPrimero(Cache::remember(self::CACHE_KEY, now()->addMinutes(self::CACHE_MINUTOS), function () {
             $rows = $this->odoo->searchRead('delivery.carrier', [
                 ['website_published', '=', true],
                 ['company_id', '=', config('odoo.company_id')],
@@ -39,7 +39,25 @@ class OdooEnvios
                 'gratis_desde' => ! empty($row['free_over']) ? (float) $row['amount'] : null,
                 'producto_id' => $row['product_id'][0] ?? null,
             ], $rows);
-        });
+        }));
+    }
+
+    /**
+     * La forma de entrega preferida (config carrito.envio_por_defecto, hoy el
+     * envío por logística) va primera: es la que viene elegida en el carrito.
+     */
+    private static function preferidoPrimero(array $envios): array
+    {
+        $texto = mb_strtolower((string) config('carrito.envio_por_defecto'));
+
+        if ($texto === '') {
+            return $envios;
+        }
+
+        usort($envios, fn (array $a, array $b) => (int) ! str_contains(mb_strtolower($a['nombre']), $texto)
+            <=> (int) ! str_contains(mb_strtolower($b['nombre']), $texto));
+
+        return $envios;
     }
 
     public function porId(int $id): ?array
@@ -53,7 +71,7 @@ class OdooEnvios
         return null;
     }
 
-    /** El primero de la lista es el que viene seleccionado por defecto. */
+    /** El primero de la lista (el envío por logística) viene seleccionado por defecto. */
     public function porDefecto(): ?array
     {
         return $this->disponibles()[0] ?? null;

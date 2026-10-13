@@ -3,6 +3,7 @@
 namespace App\Services\Odoo;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 /**
  * Cuenta corriente y objetivos del cliente en Odoo.
@@ -14,15 +15,29 @@ use Illuminate\Support\Facades\Http;
 class OdooCuenta
 {
     /**
-     * Apuntes de la cuenta por cobrar que todavía tienen saldo, sólo de
-     * Rejovot: en la base hay otras compañías (PRUEBA, BENEIBRAK…) con sus
-     * propios comprobantes («INV/2026/…») que no son la cuenta del cliente acá.
+     * Empresas cuya deuda es la cuenta del cliente: Rejovot y la de «INFO»
+     * (PRUEBA). Las otras de la base (BENEIBRAK, A.S.M.) no van.
+     *
+     * @return array<int, int>
      */
-    protected function dominio(int $partnerId): array
+    public function empresas(): array
+    {
+        return array_values(array_unique(array_filter([
+            (int) config('odoo.company_id'),
+            (int) config('odoo.company_info_id'),
+        ])));
+    }
+
+    /**
+     * Apuntes de la cuenta por cobrar que todavía tienen saldo. Sin empresa,
+     * los de las dos (los saldos van unificados); con empresa, sólo esa (la
+     * tabla muestra Rejovot o, con el botón «INFO», la otra).
+     */
+    protected function dominio(int $partnerId, ?int $empresa = null): array
     {
         return [
             ['partner_id', '=', $partnerId],
-            ['company_id', '=', config('odoo.company_id')],
+            $empresa ? ['company_id', '=', $empresa] : ['company_id', 'in', $this->empresas()],
             ['account_id.internal_type', '=', 'receivable'],
             ['parent_state', '=', 'posted'],
             ['amount_residual', '!=', 0],
@@ -38,17 +53,39 @@ class OdooCuenta
     {
         $total = $this->sumar($this->dominio($partnerId));
 
+        // Vencido es sólo lo que el cliente debe: una nota de crédito o un recibo
+        // a favor con fecha pasada no «vence» ni se resta acá.
         $vencido = $this->sumar(array_merge($this->dominio($partnerId), [
             ['date_maturity', '<', now()->toDateString()],
+            ['amount_residual', '>', 0],
         ]));
 
         return ['total' => $total, 'vencido' => $vencido];
     }
 
-    /** Movimientos pendientes, del más nuevo al más viejo. */
-    public function movimientos(int $partnerId, int $limite = 100): array
+    /** Movimientos pendientes de una empresa, del más nuevo al más viejo. */
+    /**
+     * Lo que muestra la tabla, como la lista de facturas de Odoo: todas las
+     * facturas y notas de crédito, pagadas o no, más lo que tenga saldo (un
+     * recibo con plata a favor). Los saldos de arriba siguen usando dominio().
+     */
+    protected function dominioTabla(int $partnerId, int $empresa): array
     {
-        return $this->odoo->searchRead('account.move.line', $this->dominio($partnerId), [
+        return [
+            ['partner_id', '=', $partnerId],
+            ['company_id', '=', $empresa],
+            ['account_id.internal_type', '=', 'receivable'],
+            ['parent_state', '=', 'posted'],
+            '|',
+            ['amount_residual', '!=', 0],
+            ['move_id.move_type', 'in', ['out_invoice', 'out_refund']],
+        ];
+    }
+
+    /** Comprobantes de una empresa, del más nuevo al más viejo. */
+    public function movimientos(int $partnerId, int $empresa, int $limite = 50): array
+    {
+        return $this->odoo->searchRead('account.move.line', $this->dominioTabla($partnerId, $empresa), [
             'move_id',
             'move_name',
             'date',
@@ -60,8 +97,31 @@ class OdooCuenta
             'currency_id',
         ], [
             'limit' => $limite,
-            'order' => 'date_maturity desc, id desc',
+            'order' => 'date desc, id desc',
         ]);
+    }
+
+    /** Si el cliente tiene comprobantes en esa empresa (para mostrar «INFO»). */
+    public function tieneMovimientos(int $partnerId, int $empresa): bool
+    {
+        return $this->odoo->searchCount('account.move.line', $this->dominioTabla($partnerId, $empresa)) > 0;
+    }
+
+    /**
+     * Tipo de cada comprobante (out_invoice, out_refund, entry…). Hace falta
+     * para los de la otra empresa, que se numeran sin tipo («REJ/2026/…»).
+     *
+     * @return array<int, string> id de account.move => move_type
+     */
+    public function tiposDeComprobante(array $moveIds): array
+    {
+        if (! $moveIds) {
+            return [];
+        }
+
+        return collect($this->odoo->read('account.move', array_values(array_unique($moveIds)), ['move_type']))
+            ->pluck('move_type', 'id')
+            ->all();
     }
 
     /**
@@ -138,9 +198,15 @@ class OdooCuenta
         // Nadie puede bajarse el comprobante de otro cliente ni de otra compañía.
         if (! $move
             || ($move['partner_id'][0] ?? null) !== $partnerId
-            || ($move['company_id'][0] ?? null) !== config('odoo.company_id')
-            || empty($move['access_token'])) {
+            || ! in_array($move['company_id'][0] ?? null, $this->empresas(), true)) {
             return null;
+        }
+
+        // Los de la otra empresa no siempre tienen el enlace del portal: se le
+        // genera uno (es sólo la clave de acceso al PDF, no toca nada contable).
+        if (empty($move['access_token'])) {
+            $move['access_token'] = (string) Str::uuid();
+            $this->odoo->write('account.move', [$moveId], ['access_token' => $move['access_token']]);
         }
 
         $respuesta = Http::timeout(60)->get(

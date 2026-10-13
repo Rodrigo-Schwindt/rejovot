@@ -49,10 +49,10 @@
             ['label' => 'Búsqueda por marca', 'route' => 'vehiculos', 'activo' => $desdeVehiculos],
             ['label' => 'Carrito', 'route' => 'carrito', 'privada' => true],
             ['label' => 'Mis Pedidos', 'route' => 'pedidos', 'privada' => true],
-            ['label' => 'Lista de precios', 'route' => 'precios'],
+            ['label' => 'Lista de precios', 'route' => 'precios', 'privada' => true],
             ['label' => 'Estado de la Cuenta', 'route' => 'cuenta', 'privada' => true],
             ['label' => 'Info de Pagos', 'route' => 'pagos', 'privada' => true],
-            ['label' => 'Márgenes', 'route' => 'margenes'],
+            ['label' => 'Márgenes', 'route' => 'margenes', 'privada' => true],
         ];
 
         $bloqueada = fn (array $item) => ($item['privada'] ?? false) && $soloConSesion;
@@ -142,49 +142,7 @@
                              x-transition:leave-start="translate-y-0 opacity-100"
                              x-transition:leave-end="-translate-y-1 opacity-0"
                              class="absolute right-0 z-50 mt-2 w-[300px] rounded-[10px] bg-white px-6 pb-5 pt-6 shadow-[0_12px_40px_rgba(13,43,94,.25)]">
-                            <h2 class="text-center text-[22px] font-bold leading-none text-slate-900">Iniciar sesión</h2>
-
-                            @if($errors->has('login') || $errors->has('password'))
-                                <div class="mt-4 rounded-[4px] border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-600">
-                                    @foreach($errors->get('login') + $errors->get('password') as $error)<p>{{ $error }}</p>@endforeach
-                                </div>
-                            @endif
-
-                            <form method="POST" action="{{ route('ingresar.post') }}" class="mt-5 space-y-4">
-                                @csrf
-
-                                <div>
-                                    <label for="hdr-login" class="mb-1.5 block text-[14px] font-medium text-slate-700">Usuario</label>
-                                    <input id="hdr-login" x-ref="login" type="text" name="login" value="{{ old('login') }}" required
-                                           autocomplete="username" inputmode="email"
-                                           class="h-[42px] w-full rounded-[4px] border border-slate-300 px-3 text-[14px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#002B56]">
-                                </div>
-
-                                <div>
-                                    <label for="hdr-password" class="mb-1.5 block text-[14px] font-medium text-slate-700">Contraseña</label>
-                                    <input id="hdr-password" type="password" name="password" required autocomplete="current-password"
-                                           class="h-[42px] w-full rounded-[4px] border border-slate-300 px-3 text-[14px] text-slate-800 outline-none transition focus:border-[#002B56]">
-                                </div>
-
-                                <div class="flex justify-center pt-1">
-                                    <button type="submit"
-                                            class="h-[42px] cursor-pointer rounded-[4px] bg-[#002B56] px-6 text-[13px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]">
-                                        Iniciar sesión
-                                    </button>
-                                </div>
-                            </form>
-
-                            <div class="mt-5 border-t border-slate-200 pt-4 text-center">
-                                <a href="mailto:{{ $contactData?->mail_adm ?: 'ventas@rejovot.com.ar' }}?subject=Problemas%20para%20ingresar"
-                                   class="text-[14px] text-slate-800 underline underline-offset-4 transition hover:text-[#002B56]">
-                                    Problemas para ingresar
-                                </a>
-                                <p class="mt-1.5 text-[13px] text-slate-600">
-                                    ¿No tenés cuenta?
-                                    <a href="mailto:{{ $contactData?->mail_adm ?: 'ventas@rejovot.com.ar' }}?subject=Quiero%20registrarme"
-                                       class="underline underline-offset-2 transition hover:text-[#002B56]">Registrate</a>
-                                </p>
-                            </div>
+                            @include('partials.ingreso-form', ['prefijo' => 'hdr'])
                         </div>
                     </div>
                 @endauth
@@ -225,15 +183,66 @@
             <nav class="space-y-1 px-5 py-6">
                 @foreach($navItems as $item)
                     @php $activo = ($item['activo'] ?? false) || ($item['route'] && request()->routeIs($item['route'])); @endphp
-                    <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
-                       @click="open = false"
-                       class="block rounded-lg px-4 py-3 text-[15px] font-medium transition
-                              {{ $activo ? 'bg-[#002B56] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#002B56]' }}">
-                        {{ $item['label'] }}
-                    </a>
+                    @if($bloqueada($item))
+                        {{-- Sin sesión: apagada, y al tocarla se abre el ingreso. --}}
+                        <button type="button" @click="open = false; $dispatch('abrir-login')"
+                                class="block w-full cursor-pointer rounded-lg px-4 py-3 text-left text-[15px] font-medium text-slate-400">
+                            {{ $item['label'] }}
+                        </button>
+                    @else
+                        <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
+                           @click="open = false"
+                           class="block rounded-lg px-4 py-3 text-[15px] font-medium transition
+                                  {{ $activo ? 'bg-[#002B56] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#002B56]' }}">
+                            {{ $item['label'] }}
+                        </a>
+                    @endif
                 @endforeach
             </nav>
+
+            <div class="border-t border-slate-100 px-5 py-6">
+                @auth('sitio')
+                    <p class="px-4 text-[13px] text-slate-500">
+                        <span class="block text-[15px] font-semibold leading-[130%] text-slate-800">{{ auth('sitio')->user()->name }}</span>
+                        <span class="mt-0.5 block">{{ auth('sitio')->user()->esVendedor() ? 'Vendedor' : 'Cliente' }}</span>
+                    </p>
+                    <a wire:navigate href="{{ route('reclamos') }}" @click="open = false"
+                       class="mt-3 block rounded-lg px-4 py-3 text-[15px] font-medium transition {{ request()->routeIs('reclamos*') ? 'bg-[#002B56] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#002B56]' }}">
+                        Reclamos
+                    </a>
+                    <form method="POST" action="{{ route('salir') }}">
+                        @csrf
+                        <button type="submit" class="block w-full cursor-pointer rounded-lg px-4 py-3 text-left text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#002B56]">
+                            Cerrar sesión
+                        </button>
+                    </form>
+                @else
+                    <button type="button" @click="open = false; $dispatch('abrir-login')"
+                            class="h-[46px] w-full cursor-pointer rounded-[4px] bg-[#002B56] text-[15px] font-semibold text-white transition hover:bg-[#0A2249]">
+                        Ingresar
+                    </button>
+                @endauth
+            </div>
         </aside>
+
+        @guest('sitio')
+            {{-- Ingreso en celular: el desplegable de computadora está dentro del menú
+                 de escritorio, que en pantallas chicas no se ve. --}}
+            <div x-data="{ abierto: {{ $errors->has('login') || $errors->has('password') || request()->boolean('ingresar') ? 'true' : 'false' }} }"
+                 @keydown.escape.window="abierto = false"
+                 @abrir-login.window="setTimeout(() => abierto = true)"
+                 x-show="abierto" x-cloak x-transition.opacity
+                 class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm xl:hidden">
+                <div @click.outside="abierto = false"
+                     class="relative w-full max-w-[360px] rounded-[10px] bg-white px-6 pb-5 pt-6 shadow-[0_12px_40px_rgba(13,43,94,.25)]">
+                    <button type="button" @click="abierto = false" aria-label="Cerrar"
+                            class="absolute right-3 top-3 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                    @include('partials.ingreso-form', ['prefijo' => 'mob'])
+                </div>
+            </div>
+        @endguest
     </header>
 
     <main class="flex-1">

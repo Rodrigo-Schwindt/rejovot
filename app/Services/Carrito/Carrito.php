@@ -10,10 +10,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 /**
- * Carrito del cliente activo. Es **uno por cliente** y vive en la base: el
- * vendedor y el cliente, o el cliente desde varios dispositivos, operan el
- * mismo carrito y ven lo que agrega o envía el otro. Sólo sin cliente elegido
- * queda en la sesión del navegador.
+ * Carrito del cliente activo. Cada cliente tiene **dos**: el principal y uno
+ * alternativo, y los dos viven en la base: el vendedor y el cliente, o el
+ * cliente desde varios dispositivos, operan los mismos carritos y ven lo que
+ * agrega o envía el otro. Con cuál está trabajando cada uno lo elige cada
+ * persona (queda en su sesión). Sin cliente elegido, todo queda en la sesión.
  *
  * Los productos se resuelven contra CatalogoRepository; al confirmar,
  * `EnviarPedido` lo convierte en un pedido de Odoo (sale.order).
@@ -21,6 +22,13 @@ use Illuminate\Support\Facades\Session;
 class Carrito
 {
     private const SESSION_KEY = 'carrito';
+
+    /** Con qué carrito trabaja esta persona (cada uno elige el suyo). */
+    private const SESSION_ACTIVO = 'carrito_activo';
+
+    public const PRINCIPAL = 'principal';
+
+    public const ALTERNATIVO = 'alternativo';
 
     public function __construct(
         private CatalogoRepository $catalogo,
@@ -67,18 +75,28 @@ class Carrito
         return array_values(array_filter($this->items(), fn (array $item) => $item['producto']['stock'] === 'rojo'));
     }
 
+    /** Carrito con el que trabaja esta persona: principal o alternativo. */
+    public function activo(): string
+    {
+        return Session::get(self::SESSION_ACTIVO) === self::ALTERNATIVO ? self::ALTERNATIVO : self::PRINCIPAL;
+    }
+
+    public function usar(string $carrito): void
+    {
+        Session::put(self::SESSION_ACTIVO, $carrito === self::ALTERNATIVO ? self::ALTERNATIVO : self::PRINCIPAL);
+    }
+
+    public function esAlternativo(): bool
+    {
+        return $this->activo() === self::ALTERNATIVO;
+    }
+
     public function agregar(string $codigo, int $cantidad = 1): void
     {
         $cantidad = max(1, $cantidad);
 
         if ($cliente = $this->clienteId()) {
-            // Suma en una sola sentencia: si dos personas agregan el mismo
-            // producto a la vez, no se pisa ninguna de las dos cantidades.
-            DB::statement(
-                'insert into cart_items (customer_id, codigo, cantidad, created_at, updated_at) values (?, ?, ?, ?, ?)
-                 on duplicate key update cantidad = cantidad + values(cantidad), updated_at = values(updated_at)',
-                [$cliente, $codigo, $cantidad, now(), now()],
-            );
+            $this->sumarEnBase($cliente, $this->activo(), $codigo, $cantidad);
 
             return;
         }
@@ -86,7 +104,20 @@ class Carrito
         $lineas = $this->lineas();
         $lineas[$codigo] = ($lineas[$codigo] ?? 0) + $cantidad;
 
-        Session::put(self::SESSION_KEY, $lineas);
+        Session::put($this->claveSesion(), $lineas);
+    }
+
+    /**
+     * Suma en una sola sentencia: si dos personas agregan el mismo producto a
+     * la vez, no se pisa ninguna de las dos cantidades.
+     */
+    private function sumarEnBase(int $cliente, string $carrito, string $codigo, int $cantidad): void
+    {
+        DB::statement(
+            'insert into cart_items (customer_id, carrito, codigo, cantidad, created_at, updated_at) values (?, ?, ?, ?, ?, ?)
+             on duplicate key update cantidad = cantidad + values(cantidad), updated_at = values(updated_at)',
+            [$cliente, $carrito, $codigo, $cantidad, now(), now()],
+        );
     }
 
     public function actualizar(string $codigo, int $cantidad): void
@@ -94,8 +125,7 @@ class Carrito
         $cantidad = max(1, $cantidad);
 
         if ($cliente = $this->clienteId()) {
-            DB::table('cart_items')
-                ->where('customer_id', $cliente)
+            $this->enBase($cliente)
                 ->where('codigo', $codigo)
                 ->update(['cantidad' => $cantidad, 'updated_at' => now()]);
 
@@ -106,7 +136,7 @@ class Carrito
 
         if (isset($lineas[$codigo])) {
             $lineas[$codigo] = $cantidad;
-            Session::put(self::SESSION_KEY, $lineas);
+            Session::put($this->claveSesion(), $lineas);
         }
     }
 
@@ -119,8 +149,7 @@ class Carrito
     public function quitarVarios(array $codigos): void
     {
         if ($cliente = $this->clienteId()) {
-            DB::table('cart_items')
-                ->where('customer_id', $cliente)
+            $this->enBase($cliente)
                 ->whereIn('codigo', $codigos)
                 ->delete();
 
@@ -133,18 +162,18 @@ class Carrito
             unset($lineas[$codigo]);
         }
 
-        Session::put(self::SESSION_KEY, $lineas);
+        Session::put($this->claveSesion(), $lineas);
     }
 
     public function vaciar(): void
     {
         if ($cliente = $this->clienteId()) {
-            DB::table('cart_items')->where('customer_id', $cliente)->delete();
+            $this->enBase($cliente)->delete();
 
             return;
         }
 
-        Session::forget(self::SESSION_KEY);
+        Session::forget($this->claveSesion());
     }
 
     /**
@@ -153,7 +182,14 @@ class Carrito
      */
     public function firma(): string
     {
-        return md5(json_encode($this->lineas()));
+        // Con el carrito activo: al pasar al otro, la pantalla se actualiza.
+        return md5($this->activo() . json_encode($this->lineas()));
+    }
+
+    /** @return array<string, int> código => cantidad, del carrito activo */
+    public function cantidades(): array
+    {
+        return $this->lineas();
     }
 
     /** @return array<int, string> códigos de los productos cargados */
@@ -245,13 +281,12 @@ class Carrito
     private function lineas(): array
     {
         if (! $cliente = $this->clienteId()) {
-            return Session::get(self::SESSION_KEY, []);
+            return Session::get($this->claveSesion(), []);
         }
 
         $this->pasarCarritoDeSesion($cliente);
 
-        return DB::table('cart_items')
-            ->where('customer_id', $cliente)
+        return $this->enBase($cliente)
             ->orderBy('id')
             ->pluck('cantidad', 'codigo')
             ->map(fn ($cantidad) => (int) $cantidad)
@@ -261,6 +296,20 @@ class Carrito
     private function clienteId(): ?int
     {
         return $this->clienteActivo->actual()?->id;
+    }
+
+    /** Las filas del carrito activo de ese cliente. */
+    private function enBase(int $cliente): \Illuminate\Database\Query\Builder
+    {
+        return DB::table('cart_items')
+            ->where('customer_id', $cliente)
+            ->where('carrito', $this->activo());
+    }
+
+    /** Sin cliente elegido, cada carrito en su propia clave de sesión. */
+    private function claveSesion(): string
+    {
+        return $this->esAlternativo() ? self::SESSION_KEY . '_' . self::ALTERNATIVO : self::SESSION_KEY;
     }
 
     /**
@@ -275,8 +324,9 @@ class Carrito
 
         $viejo = Session::pull(self::SESSION_KEY, []);
 
+        // Es de antes de que hubiera dos: va al principal.
         foreach ($viejo as $codigo => $cantidad) {
-            $this->agregar((string) $codigo, (int) $cantidad);
+            $this->sumarEnBase($cliente, self::PRINCIPAL, (string) $codigo, (int) $cantidad);
         }
     }
 }

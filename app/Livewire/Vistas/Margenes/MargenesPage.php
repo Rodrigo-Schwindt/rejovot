@@ -26,7 +26,7 @@ class MargenesPage extends Component
         $this->general = $margenes->general();
         $this->descuento = $margenes->descuento();
 
-        foreach ($opciones['marcas'] as $marca) {
+        foreach ($opciones['marcas_margen'] ?? $opciones['marcas'] as $marca) {
             $clave = Margenes::clave($marca);
             $this->marcas[$clave] = $margenes->marcas()[$clave] ?? $this->general;
         }
@@ -77,7 +77,7 @@ class MargenesPage extends Component
         $opciones = $catalogo->filtros();
 
         return view('livewire.vistas.margenes.margenes-page', [
-            'listaMarcas' => $opciones['marcas'],
+            'listaMarcas' => $opciones['marcas_margen'] ?? $opciones['marcas'],
             'listaFamilias' => $opciones['rubros'],
         ]);
     }

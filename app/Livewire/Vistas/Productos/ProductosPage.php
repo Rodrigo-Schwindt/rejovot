@@ -74,6 +74,17 @@ class ProductosPage extends Component
     public function mount(Carrito $carrito): void
     {
         $this->sincronizarContador($carrito);
+
+        // En el celular la tabla no entra: arranca en cuadrícula, salvo que el
+        // link ya diga qué vista usar.
+        if (! request()->query->has('vista') && self::esCelular()) {
+            $this->vista = 'cuadricula';
+        }
+    }
+
+    private static function esCelular(): bool
+    {
+        return (bool) preg_match('/Mobi|Android|iPhone|iPod/i', (string) request()->userAgent());
     }
 
     /**
@@ -158,6 +169,17 @@ class ProductosPage extends Component
         $this->resetPage();
     }
 
+    /** Pasa al carrito principal o al alternativo; los dos quedan guardados. */
+    public function usarCarrito(string $cual, Carrito $carrito): void
+    {
+        $carrito->usar($cual);
+        $this->sincronizarContador($carrito);
+
+        $this->dispatch('show-toast', type: 'success', message: $carrito->esAlternativo()
+            ? 'Ahora agregás al carrito alternativo.'
+            : 'Ahora agregás al carrito principal.');
+    }
+
     public function seleccionar(string $codigo): void
     {
         $this->seleccionado = $codigo;
@@ -166,6 +188,19 @@ class ProductosPage extends Component
     public function cambiarVista(string $vista): void
     {
         $this->vista = $vista === 'cuadricula' ? 'cuadricula' : 'lista';
+        $this->soloCuadriculaSinSesion();
+    }
+
+    /**
+     * Sin sesión de cliente o vendedor no se muestran precios ni stock: la
+     * única vista es la cuadrícula (la lista es una tabla de precios).
+     */
+    private function soloCuadriculaSinSesion(): void
+    {
+        if (! auth('sitio')->check()) {
+            $this->vista = 'cuadricula';
+            $this->mostrador = false;
+        }
     }
 
     public function agregar(string $codigo, CatalogoRepository $catalogo, Carrito $carrito, ClienteActivo $clienteActivo): void
@@ -192,6 +227,16 @@ class ProductosPage extends Component
 
     public function render(CatalogoRepository $catalogo, Margenes $margenes, RefrescoEnVivo $refresco)
     {
+        $this->soloCuadriculaSinSesion();
+
+        $opciones = $catalogo->filtros($this->marca);
+
+        // También contempla combinaciones incompatibles que lleguen por URL.
+        if ($this->rubro !== '' && ! in_array($this->rubro, $opciones['rubros'], true)) {
+            $this->rubro = '';
+            $this->nuevaBusqueda();
+        }
+
         $filtros = [
             'q' => $this->q,
             'marca' => $this->marca,
@@ -241,13 +286,16 @@ class ProductosPage extends Component
             'detalle' => $detalle,
             'ofertas' => $ofertas,
             'clienteElegido' => $clienteElegido,
+            'carritoActivo' => app(Carrito::class)->activo(),
+            // Lo que ya está en el carrito elegido: se marca en el listado.
+            'enCarrito' => auth('sitio')->check() ? app(Carrito::class)->cantidades() : [],
             'descuentoLista' => $margenes->descuento(),
             'clientes' => $this->buscarClientes(),
             'puedeElegirCliente' => app(ClienteActivo::class)->puedeElegir(),
             'totalCartera' => auth('sitio')->user()?->esVendedor() ? $this->cartera()->count() : 0,
             'puedeOperar' => app(ClienteActivo::class)->puedeOperar(),
             'motivoBloqueo' => app(ClienteActivo::class)->motivo(),
-            'opciones' => $catalogo->filtros(),
+            'opciones' => $opciones,
         ]);
     }
 

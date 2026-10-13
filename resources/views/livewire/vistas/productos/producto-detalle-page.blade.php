@@ -146,6 +146,8 @@
                     {{ $producto['descripcion'] }}
                 </h1>
 
+                {{-- Precios, cantidad y carrito, sólo con sesión de cliente o vendedor. --}}
+                @auth('sitio')
                 <dl class="mt-auto space-y-3 pt-10 text-[16px] max-lg:pt-6">
                     <div class="flex items-center justify-between gap-4">
                         <dt class="font-semibold text-[#111]">Precio Lista</dt>
@@ -160,8 +162,9 @@
                         <dd class="font-bold text-[#111]">{{ Precio::ar($producto['precio_venta']) }}</dd>
                     </div>
                 </dl>
+                @endauth
 
-                <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+                <div class="{{ auth('sitio')->check() ? 'mt-8' : 'mt-auto pt-10 max-lg:pt-6' }} flex flex-wrap items-center justify-between gap-4">
                     @if($wssp)
                         <a href="https://wa.me/{{ preg_replace('/\D/', '', $wssp) }}?text={{ $mensajeWssp }}"
                            target="_blank" rel="noopener"
@@ -170,6 +173,7 @@
                         </a>
                     @endif
 
+                    @auth('sitio')
                     <div class="flex items-center gap-3 max-sm:w-full max-sm:justify-end">
                         <label class="sr-only" for="cantidad-detalle">Cantidad</label>
                         {{-- Flechas propias: las del navegador sólo aparecen al pasar el mouse. --}}
@@ -197,6 +201,12 @@
                             </svg>
                         </button>
                     </div>
+                    @else
+                        <button type="button" x-data @click="$dispatch('abrir-login')"
+                                class="inline-flex h-[45px] cursor-pointer items-center rounded-[4px] border border-[#002B56] px-4 text-[15px] font-semibold text-[#002B56] transition hover:bg-[#002B56] hover:text-white max-sm:w-full max-sm:justify-center">
+                            Ingresá para ver precio y stock
+                        </button>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -238,40 +248,61 @@
                 <h2 class="mb-6 text-[28px] font-bold text-slate-900 max-sm:text-[22px]">Productos relacionados</h2>
 
                 {{-- Misma card que el catálogo en cuadrícula: cuatro columnas con 24px de gap. --}}
-                {{-- En celulares pasa a carrusel horizontal con snap. --}}
+                {{-- En celulares pasa a carrusel horizontal con snap, de a un producto por vez. --}}
                 {{-- En celular pasa solo cada 4s; si el usuario arrastra, espera y sigue. --}}
+                {{-- Los puntos de abajo (sólo celular) marcan cuál se ve y llevan a cada uno. --}}
                 <div x-data="{
                         timer: null,
                         esperarHasta: 0,
+                        actual: 0,
                         get enCelular() { return window.matchMedia('(max-width: 639px)').matches },
+                        get paso() {
+                            const carrusel = this.$refs.carrusel;
+                            return (carrusel.firstElementChild?.offsetWidth ?? carrusel.clientWidth) + 16;
+                        },
                         iniciar() {
-                            if (this.$el.children.length < 2) return;
+                            if (this.$refs.carrusel.children.length < 2) return;
                             this.timer = setInterval(() => this.avanzar(), 4000);
                         },
                         avanzar() {
                             // Quieto si no es celular, si la pestaña está oculta o si lo están tocando.
                             if (! this.enCelular || document.hidden || Date.now() < this.esperarHasta) return;
 
-                            const carrusel = this.$el;
-                            const paso = (carrusel.firstElementChild?.offsetWidth ?? carrusel.clientWidth) + 16;
-                            const ultimo = carrusel.scrollWidth - carrusel.clientWidth - 8;
-
-                            carrusel.scrollTo({
-                                left: carrusel.scrollLeft >= ultimo ? 0 : carrusel.scrollLeft + paso,
-                                behavior: 'smooth',
-                            });
+                            const total = this.$refs.carrusel.children.length;
+                            this.ir(this.actual + 1 >= total ? 0 : this.actual + 1, false);
+                        },
+                        ir(indice, tocado = true) {
+                            if (tocado) this.pausar();
+                            this.$refs.carrusel.scrollTo({ left: indice * this.paso, behavior: 'smooth' });
+                        },
+                        alDesplazar() {
+                            this.actual = Math.round(this.$refs.carrusel.scrollLeft / this.paso);
                         },
                         pausar() { this.esperarHasta = Date.now() + 6000 },
                         destroy() { clearInterval(this.timer) },
                      }"
-                     x-init="iniciar()"
-                     @pointerdown="pausar()" @touchstart.passive="pausar()" @wheel.passive="pausar()"
-                     class="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4 max-sm:-mx-4 max-sm:flex max-sm:snap-x max-sm:snap-mandatory max-sm:gap-4 max-sm:overflow-x-auto max-sm:px-4 max-sm:pb-3 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">
-                    @foreach($relacionados as $item)
-                        <div wire:key="rel-{{ $item['codigo'] }}" class="max-sm:w-[82%] max-sm:shrink-0 max-sm:snap-start">
-                            @include('livewire.vistas.productos.partials.producto-card', ['producto' => $item])
+                     x-init="iniciar()">
+                    <div x-ref="carrusel"
+                         @scroll.passive="alDesplazar()"
+                         @pointerdown="pausar()" @touchstart.passive="pausar()" @wheel.passive="pausar()"
+                         class="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4 max-sm:flex max-sm:snap-x max-sm:snap-mandatory max-sm:gap-4 max-sm:overflow-x-auto max-sm:pb-3 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">
+                        @foreach($relacionados as $item)
+                            <div wire:key="rel-{{ $item['codigo'] }}" class="max-sm:w-full max-sm:shrink-0 max-sm:snap-start">
+                                @include('livewire.vistas.productos.partials.producto-card', ['producto' => $item])
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if(count($relacionados) > 1)
+                        <div class="mt-3 flex items-center justify-center gap-2 sm:hidden">
+                            @foreach($relacionados as $i => $item)
+                                <button type="button" @click="ir({{ $i }})"
+                                        class="h-[5px] rounded-full transition-all"
+                                        :class="actual === {{ $i }} ? 'w-8 bg-[#E11A22]' : 'w-6 bg-slate-300'"
+                                        aria-label="Ver relacionado {{ $i + 1 }}"></button>
+                            @endforeach
                         </div>
-                    @endforeach
+                    @endif
                 </div>
             </section>
         @endif

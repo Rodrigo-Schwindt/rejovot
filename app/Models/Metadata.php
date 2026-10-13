@@ -43,7 +43,7 @@ class Metadata extends Model
         'precios' => [
             'nombre' => 'Lista de precios',
             'rutas' => ['precios'],
-            'privada' => false,
+            'privada' => true,
             'title' => 'Lista de precios',
             'description' => 'Lista de precios mayorista de autopartes actualizada. Descargala en PDF o CSV.',
             'keywords' => 'lista de precios autopartes, precios repuestos mayorista',

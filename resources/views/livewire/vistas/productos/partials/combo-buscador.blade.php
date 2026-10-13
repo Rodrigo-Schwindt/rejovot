@@ -10,7 +10,8 @@
     $seleccionado = $seleccionado ?? '';
 @endphp
 
-<div x-data="{
+<div wire:key="{{ $id }}-{{ md5(json_encode([$opciones, $seleccionado])) }}"
+     x-data="{
         abierto: false,
         busqueda: '',
         opciones: @js($opciones),

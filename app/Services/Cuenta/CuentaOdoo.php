@@ -39,7 +39,14 @@ class CuentaOdoo implements CuentaRepository
         }
     }
 
-    public function movimientos(): array
+    /** Tipo que se muestra para los comprobantes que vienen sin tipo en el nombre. */
+    private const TIPOS = [
+        'out_invoice' => 'FC',
+        'out_refund' => 'NC',
+        'entry' => 'REC',
+    ];
+
+    public function movimientos(string $cuenta = '', int $limite = 50): array
     {
         $partnerId = $this->partnerId();
 
@@ -47,15 +54,38 @@ class CuentaOdoo implements CuentaRepository
             return [];
         }
 
+        $empresa = $cuenta === 'info' ? config('odoo.company_info_id') : config('odoo.company_id');
+
         try {
-            $rows = $this->odoo->movimientos($partnerId);
+            $rows = $this->odoo->movimientos($partnerId, (int) $empresa, $limite);
+
+            // La otra empresa numera «REJ/2026/…», sin el tipo adelante.
+            $sinTipo = array_filter($rows, fn (array $row) => ! str_contains($this->nombreComprobante($row), ' '));
+            $tipos = $this->odoo->tiposDeComprobante(array_map(fn (array $row) => $row['move_id'][0], $sinTipo));
         } catch (OdooException $e) {
             Log::warning('No se pudieron leer los movimientos de Odoo: ' . $e->getMessage());
 
             return [];
         }
 
-        return array_map(fn (array $row) => $this->comoArray($row), $rows);
+        return array_map(fn (array $row) => $this->comoArray($row, $tipos), $rows);
+    }
+
+    public function tieneInfo(): bool
+    {
+        $partnerId = $this->partnerId();
+
+        if (! $partnerId || ! config('odoo.company_info_id')) {
+            return false;
+        }
+
+        try {
+            return $this->odoo->tieneMovimientos($partnerId, (int) config('odoo.company_info_id'));
+        } catch (OdooException $e) {
+            Log::warning('No se pudo revisar la cuenta INFO en Odoo: ' . $e->getMessage());
+
+            return false;
+        }
     }
 
     /** Objetivo de compra del mes; null si el cliente no tiene escala asignada. */
@@ -103,25 +133,50 @@ class CuentaOdoo implements CuentaRepository
         return $this->clienteActivo->actual()?->odoo_id;
     }
 
-    private function comoArray(array $row): array
+    private function comoArray(array $row, array $tipos = []): array
     {
         $vencimiento = $row['date_maturity'] ?: $row['date'];
         $comprobante = $this->nombreComprobante($row);
         [$tipo, $numero] = $this->tipoYNumero($comprobante);
+
+        // Sin tipo en el nombre: se toma del comprobante en Odoo.
+        if ($tipo === '—' && isset($tipos[$row['move_id'][0] ?? 0])) {
+            $tipo = self::TIPOS[$tipos[$row['move_id'][0]]] ?? '—';
+        }
+
+        // Como lo pidió Rejovot: las notas de crédito van en negativo; un recibo
+        // con plata de más (el cliente pagó de más) va en positivo y «a favor».
+        $notaCredito = str_starts_with(mb_strtoupper($tipo), 'NC');
+        $signo = $notaCredito ? -1 : 1;
+        $importe = abs((float) $row['debit'] - (float) $row['credit']);
+        $saldo = abs((float) $row['amount_residual']);
+        $aFavor = ! $notaCredito && (float) $row['amount_residual'] < 0;
 
         return [
             'emision' => $this->fecha($row['date']),
             'vencimiento' => $this->fecha($vencimiento),
             'tipo' => $tipo,
             'numero' => $numero,
-            // Lo que suma a la deuda va al debe; lo que la baja, al haber.
-            'haber' => (float) $row['debit'] - (float) $row['credit'],
-            'saldo' => (float) $row['amount_residual'],
-            'importe_origen' => (float) $row['amount_currency'],
-            'importe_bruto_origen' => (float) $row['amount_currency'],
-            'vencido' => $vencimiento < now()->toDateString(),
+            'importe' => $signo * $importe,
+            // Lo que ya se pagó (o se aplicó) del comprobante; sin pagos, 0.
+            'pago_a_cuenta' => $signo * max(0, round($importe - $saldo, 2)),
+            // Lo que falta pagar; sin pagos, igual al importe.
+            'saldo' => $signo * $saldo,
+            'a_favor' => $aFavor,
+            // Como en Odoo: «Pagado» si no le queda saldo, si no «Pendiente de pago».
+            'estado' => match (true) {
+                abs((float) $row['amount_residual']) < 0.005 => 'pagado',
+                $aFavor => 'a_favor',
+                default => 'pendiente',
+            },
+            'nota_credito' => $notaCredito,
+            'linea' => $row['id'] ?? null,
+            // Sólo vence lo que el cliente debe: ni las notas de crédito ni lo a favor.
+            'vencido' => (float) $row['amount_residual'] > 0 && $vencimiento < now()->toDateString(),
             'comprobante' => $comprobante,
-            'move_id' => $row['move_id'][0] ?? null,
+            // Odoo sólo entrega el PDF de facturas y notas de crédito: los
+            // recibos (son pagos) quedan sin descarga.
+            'move_id' => str_starts_with(mb_strtoupper($tipo), 'REC') ? null : ($row['move_id'][0] ?? null),
         ];
     }
 

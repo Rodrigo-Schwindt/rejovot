@@ -23,7 +23,9 @@
          class="fixed inset-0 z-[9991] touch-none bg-black/45 backdrop-blur-[2px] lg:hidden"
          aria-hidden="true"></div>
 
-    <aside class="space-y-5 lg:pt-[38px]
+    {{-- lg:pt-[38px]: a la altura de la grilla, que arranca debajo de los interruptores
+         Cuadrícula/Lista. Sin sesión esos interruptores no están y la grilla sube. --}}
+    <aside class="space-y-5 {{ auth('sitio')->check() ? 'lg:pt-[38px]' : '' }}
                   max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-[9992] max-lg:max-h-[86dvh] max-lg:overflow-y-auto max-lg:overscroll-contain
                   max-lg:rounded-t-[16px] max-lg:bg-white max-lg:px-4 max-lg:pb-[max(24px,env(safe-area-inset-bottom))] max-lg:pt-2
                   max-lg:shadow-[0_-12px_40px_rgba(13,43,94,.25)] max-lg:transition-transform max-lg:duration-300 max-lg:ease-[cubic-bezier(.22,1,.36,1)]"
@@ -64,7 +66,7 @@
                        class="flex h-[39px] w-full items-center justify-center rounded-t-[4px] border border-[#D9D9D9] bg-[#F8F8F8] text-center text-[20px] font-semibold leading-[140%] text-black transition hover:text-[#002B56]">
                         {{ $detalle['codigo'] }}
                     </a>
-                    <div class="flex h-[181px] w-full items-center justify-center border border-t-0 border-[#D9D9D9] {{ ! empty($detalle['imagen']) ? 'cursor-zoom-in' : '' }}"
+                    <div class="flex h-[241px] w-full items-center justify-center border border-t-0 border-[#D9D9D9] {{ ! empty($detalle['imagen']) ? 'cursor-zoom-in' : '' }}"
                          x-data @click="$dispatch('abrir-visor', { imagenes: @js($detalle['imagenes'] ?? array_filter([$detalle['imagen'] ?? null])), titulo: @js($detalle['codigo']) })">
                         @include('livewire.vistas.productos.partials.producto-imagen', ['class' => 'h-full w-full', 'src' => $detalle['imagen'] ?? null, 'alt' => $detalle['codigo']])
                     </div>

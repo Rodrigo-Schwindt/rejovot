@@ -32,6 +32,8 @@
         <div id="catalogo" class="mt-6 grid grid-cols-1 gap-6 scroll-mt-6 lg:grid-cols-[minmax(0,1fr)_288px]">
             <div class="max-lg:min-w-0">
 
+                {{-- Sin sesión no hay precios: siempre cuadrícula y sin vista mostrador. --}}
+                @auth('sitio')
                 <div class="anim-entrada mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style="--retraso: 160">
                     <div class="flex items-center gap-3 text-[14px] text-slate-700">
                         <span class="{{ $vista === 'cuadricula' ? 'font-semibold text-slate-900' : '' }}">Cuadrícula</span>
@@ -45,6 +47,8 @@
                         <span class="{{ $vista === 'lista' ? 'font-semibold text-slate-900' : '' }}">Lista</span>
                     </div>
 
+                    @include('livewire.vistas.carrito.partials.switch-carrito')
+
                     <label class="flex cursor-pointer items-center gap-3 text-[14px] text-slate-700">
                         {{-- Gris apagado; se pinta de azul recién cuando la vista mostrador está activa. --}}
                         <span class="relative inline-flex h-[22px] w-[42px] shrink-0 items-center rounded-full transition-colors duration-300 {{ $mostrador ? 'bg-[#002B56]' : 'bg-slate-300' }}">
@@ -54,6 +58,7 @@
                         <span class="{{ $mostrador ? 'font-semibold text-slate-900' : '' }}">Vista mostrador</span>
                     </label>
                 </div>
+                @endauth
 
                 {{-- El listado se atenúa mientras se filtra y re-anima al llegar el resultado. --}}
                 <div wire:key="listado-{{ $firmaListado }}"
@@ -66,12 +71,12 @@
                     @endif
                 </div>
 
-                <div class="anim-entrada mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style="--retraso: 300">
+                <div class="anim-entrada mt-5 flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:text-left" style="--retraso: 300">
                     <p class="text-[13px] text-slate-500">
                         <span class="font-semibold text-slate-700">{{ number_format($paginador->total(), 0, ',', '.') }}</span>
                         {{ $paginador->total() === 1 ? 'producto' : 'productos' }}
                         @if($itemsCarrito > 0)
-                            · <span class="font-semibold text-[#002B56]">{{ $itemsCarrito }}</span> en el carrito
+                            · <span class="font-semibold text-[#002B56]">{{ $itemsCarrito }}</span> en el carrito{{ $carritoActivo === 'alternativo' ? ' alternativo' : '' }}
                         @endif
                     </p>
 

@@ -8,5 +8,6 @@ Disallow: /estado-de-cuenta
 Disallow: /info-de-pagos
 Disallow: /reclamos
 Disallow: /margenes
+Disallow: /lista-de-precios
 
 Sitemap: https://rejovot.com.ar/sitemap.xml

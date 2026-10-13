@@ -12,7 +12,7 @@
 
 @if ($paginator->hasPages())
     <nav role="navigation" aria-label="Paginación"
-         class="flex flex-col gap-4 border-t border-slate-200 pt-5 lg:flex-row lg:items-center lg:justify-between">
+         class="flex flex-col items-center gap-4 border-t border-slate-200 pt-5 lg:flex-row lg:justify-between">
 
         <p class="whitespace-nowrap text-[13px] text-slate-500">
             Mostrando

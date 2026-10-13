@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Brand;
 use App\Models\Metadata;
 use App\Models\Product;
 
@@ -83,7 +84,11 @@ class Seo
         $marca = trim((string) request()->query('marca'));
         $rubro = trim((string) request()->query('rubro'));
 
-        if ($marca !== '') {
+        // NOVEDADES y otras categorías que no son marca: el nombre solo.
+        if ($marca !== '' && Brand::where('name', $marca)->value('es_marca') === false) {
+            $seo['title'] = self::title(mb_convert_case(mb_strtolower($marca), MB_CASE_TITLE));
+            $seo['canonical'] = url()->current() . '?' . http_build_query(['marca' => $marca]);
+        } elseif ($marca !== '') {
             $seo['title'] = self::title("Repuestos {$marca}");
             $seo['description'] = "Autopartes y repuestos {$marca} al por mayor, con stock y precios actualizados. " . $seo['description'];
             $seo['canonical'] = url()->current() . '?' . http_build_query(['marca' => $marca]);

@@ -47,6 +47,9 @@ class ContactManager extends Controller
 
         $contact->fill($validated);
 
+        // Casilla sin tildar no viaja en el formulario: es «apagado».
+        $contact->avisar_pedidos = $request->boolean('avisar_pedidos');
+
         foreach ([1, 2, 3] as $i) {
             $campo = "icono_{$i}";
 

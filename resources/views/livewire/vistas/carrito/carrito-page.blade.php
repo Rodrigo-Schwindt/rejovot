@@ -35,7 +35,14 @@
                 @if($descuentoLista > 0)
                     · {{ rtrim(rtrim(number_format($descuentoLista, 2, ',', '.'), '0'), ',') }}% de descuento
                 @endif
+                @if($carritoActivo === 'alternativo')
+                    · <strong class="text-[#E11A22]">Carrito alternativo</strong>
+                @endif
             </p>
+
+            <div class="anim-entrada mb-5" style="--retraso: 80">
+                @include('livewire.vistas.carrito.partials.switch-carrito')
+            </div>
         @else
             <p class="anim-entrada mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[#E11A22] bg-[#E11A22]/[.05] px-4 py-3 text-[15px] text-slate-700" style="--retraso: 60">
                 {{ $motivoBloqueo }}

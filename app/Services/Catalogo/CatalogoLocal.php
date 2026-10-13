@@ -22,6 +22,12 @@ class CatalogoLocal implements CatalogoRepository
     /** Subconsulta con los ids que coinciden con el texto buscado. */
     private ?Builder $coincidencias = null;
 
+    /** Lo que se escribió en el buscador, para ordenar por relevancia. */
+    private string $textoBuscado = '';
+
+    /** Palabras que no aportan a la búsqueda («disco de freno» = «disco freno»). */
+    private const RELLENO = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'para', 'con', 'sin', 'por', 'en', 'a', 'al', 'un', 'una', 'x'];
+
     /** Lo que todavía no tiene datos en Odoo se sirve de la implementación demo. */
     public function __construct(private CatalogoDemo $demo)
     {
@@ -69,17 +75,27 @@ class CatalogoLocal implements CatalogoRepository
         return $this->demo->vehiculos();
     }
 
-    public function filtros(): array
+    public function filtros(string $marca = ''): array
     {
         return [
-            // Sólo marcas y rubros con algo publicado: lo demás no se puede comprar
-            // ni tiene sentido ponerle margen.
-            'marcas' => Brand::whereHas('products', fn (Builder $q) => $q->publicables())
+            // Las categorías de ecommerce de Odoo, todas y en su orden (NOVEDADES
+            // primero), tengan o no productos publicados hoy.
+            'marcas' => Brand::whereNotNull('odoo_id')
+                ->orderBy('sort')
+                ->pluck('name')
+                ->all(),
+            // Para Márgenes: sólo marcas de verdad y con algo publicado; lo demás
+            // no se puede comprar ni tiene sentido ponerle margen.
+            'marcas_margen' => Brand::where('es_marca', true)
+                ->whereHas('products', fn (Builder $q) => $q->publicables())
                 ->orderBy('name')
                 ->pluck('name')
                 ->all(),
-            // El rubro es la categoría de Odoo: son muchas, el combo las busca.
-            'rubros' => Category::whereHas('products', fn (Builder $q) => $q->publicables())
+            // La misma relación de ecommerce que usa el filtro del listado.
+            'rubros' => Category::whereHas('products', fn (Builder $q) => $q->publicables()
+                ->when($marca !== '', fn (Builder $q) => $q->whereHas(
+                    'categoriasWeb', fn (Builder $q) => $q->where('name', $marca),
+                )))
                 ->orderBy('name')
                 ->pluck('name')
                 ->all(),
@@ -174,8 +190,9 @@ class CatalogoLocal implements CatalogoRepository
             $query->where('type', $clave);
         }
 
+        // Por categoría de ecommerce: incluye NOVEDADES, que no es la marca de nadie.
         if (! empty($filtros['marca'])) {
-            $query->whereHas('brand', fn (Builder $q) => $q->where('name', $filtros['marca']));
+            $query->whereHas('categoriasWeb', fn (Builder $q) => $q->where('name', $filtros['marca']));
         }
 
         if (! empty($filtros['rubro'])) {
@@ -210,6 +227,14 @@ class CatalogoLocal implements CatalogoRepository
                 ->addBinding($bindings, 'order');
         }
 
+        // Más relevante primero: el código exacto, después la frase tal cual.
+        if ($this->textoBuscado !== '') {
+            $query->orderByRaw(
+                'CASE WHEN products.code = ? THEN 0 WHEN products.name LIKE ? THEN 1 ELSE 2 END',
+                [$this->textoBuscado, '%' . $this->escaparLike($this->textoBuscado) . '%'],
+            );
+        }
+
         return $query->orderBy('name');
     }
 
@@ -222,17 +247,22 @@ class CatalogoLocal implements CatalogoRepository
      */
     private function buscarTexto(Builder $query, string $texto, bool $soloCodigo = false): void
     {
-        $coincidencias = Product::query()
-            ->publicables()
-            ->where(function (Builder $q) use ($texto, $soloCodigo) {
-                $q->where('code', 'like', '%' . $texto . '%');
+        $coincidencias = Product::query()->publicables();
 
-                if (! $soloCodigo) {
-                    $q->orWhere('name', 'like', '%' . $texto . '%')
-                        ->orWhere('oem_codes', 'like', '%' . $texto . '%');
-                }
-            })
-            ->select('id');
+        if ($soloCodigo) {
+            // Filtro «Código»: sólo el código, con o sin puntos, barras o guiones.
+            $coincidencias->where(fn (Builder $q) => $this->enCodigo($q, $texto));
+        } else {
+            // Buscador libre: cada palabra tiene que estar, en cualquier orden y
+            // en cualquier campo («disco corsa» encuentra «DISCO FRENO CORSA»).
+            foreach ($this->terminos($texto) as $termino) {
+                $coincidencias->where(fn (Builder $q) => $this->enCualquierCampo($q, $termino));
+            }
+
+            $this->textoBuscado = $texto;
+        }
+
+        $coincidencias->select('id');
 
         $relacionados = DB::table('product_related')
             ->whereIn('product_id', (clone $coincidencias))
@@ -245,6 +275,78 @@ class CatalogoLocal implements CatalogoRepository
 
         // Primero lo que coincide de verdad; después lo que se sumó por relación.
         $this->coincidencias = (clone $coincidencias);
+    }
+
+    /**
+     * Palabras del buscador, sin relleno y sin la «s» del plural
+     * («discos» → «disco», «cables» → «cabl»): así encuentra singular y plural.
+     *
+     * @return array<int, string>
+     */
+    private function terminos(string $texto): array
+    {
+        $palabras = preg_split('/[\s,;]+/u', mb_strtolower(trim($texto)), -1, PREG_SPLIT_NO_EMPTY);
+
+        return collect($palabras)
+            ->reject(fn (string $p) => in_array($p, self::RELLENO, true))
+            ->map(function (string $p) {
+                if (preg_match('/\d/', $p) || mb_strlen($p) < 4) {
+                    return $p;
+                }
+
+                return match (true) {
+                    mb_strlen($p) >= 5 && str_ends_with($p, 'es') => mb_substr($p, 0, -2),
+                    str_ends_with($p, 's') => mb_substr($p, 0, -1),
+                    default => $p,
+                };
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /** Una palabra en el nombre, el código, los OEM, la marca o el rubro. */
+    private function enCualquierCampo(Builder $q, string $termino): void
+    {
+        $like = '%' . $this->escaparLike($termino) . '%';
+
+        $q->where('name', 'like', $like)
+            ->orWhere('oem_codes', 'like', $like)
+            ->orWhereIn('brand_id', Brand::where('name', 'like', $like)->select('id'))
+            ->orWhereIn('category_id', Category::where('name', 'like', $like)->select('id'))
+            ->orWhere('code', 'like', $like);
+
+        // Si tiene números puede ser un código escrito con otros separadores
+        // («6246ff0321» / «6246/FF.0321»). Sólo ahí: comparar así es más lento.
+        if (preg_match('/\d/', $termino) && ($limpio = $this->sinSeparadores($termino)) !== '') {
+            $q->orWhereRaw($this->columnaSinSeparadores('code') . ' LIKE ?', ['%' . $limpio . '%'])
+                ->orWhereRaw($this->columnaSinSeparadores('oem_codes') . ' LIKE ?', ['%' . $limpio . '%']);
+        }
+    }
+
+    /** El código, escrito con o sin puntos, barras, guiones o espacios. */
+    private function enCodigo(Builder $q, string $texto): void
+    {
+        $q->where('code', 'like', '%' . $this->escaparLike($texto) . '%');
+
+        if (($limpio = $this->sinSeparadores($texto)) !== '') {
+            $q->orWhereRaw($this->columnaSinSeparadores('code') . ' LIKE ?', ['%' . $limpio . '%']);
+        }
+    }
+
+    private function sinSeparadores(string $texto): string
+    {
+        return $this->escaparLike((string) preg_replace('/[\s.\/\-_]+/', '', mb_strtolower($texto)));
+    }
+
+    private function columnaSinSeparadores(string $columna): string
+    {
+        return "LOWER(REPLACE(REPLACE(REPLACE(REPLACE({$columna}, '.', ''), '/', ''), '-', ''), ' ', ''))";
+    }
+
+    private function escaparLike(string $texto): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $texto);
     }
 
     /** Traduce el modelo al formato que ya consumen las vistas. */

@@ -5,6 +5,8 @@
     $clave = ProductosPage::clave($producto['codigo']);
     $cantidad = max(1, (int) ($cantidades[$clave] ?? 1));
     $activo = $seleccionado === $producto['codigo'];
+    // Ya está en el carrito: fondo celeste y la cantidad junto al código.
+    $yaEnCarrito = (int) (($enCarrito ?? [])[$producto['codigo']] ?? 0);
     $stockColor = match ($producto['stock']) {
         'verde' => 'bg-[#2FBF4B]',
         'amarillo' => 'bg-[#F2C438]',
@@ -20,12 +22,15 @@
 @endphp
 
 {{-- h-full + mt-auto: los precios y el botón quedan a la misma altura en toda la fila. --}}
-{{-- En mobile, al tocar la card se abre la ficha como panel inferior (ver panel-detalle). --}}
+{{-- En computadora, tocar la card la muestra en la ficha de la derecha; en pantallas
+     sin ficha al costado (celular, tablet) lleva directo al detalle del producto. --}}
 <div wire:key="card-{{ $clave }}"
-     wire:click="seleccionar('{{ $producto['codigo'] }}')"
-     x-data @click="$dispatch('abrir-ficha')"
+     x-data
+     @click="window.matchMedia('(max-width: 1023px)').matches
+        ? Livewire.navigate(@js(route('producto', ['codigo' => $producto['codigo']])))
+        : $wire.seleccionar(@js($producto['codigo']))"
      style="--retraso: {{ $retraso }}"
-     class="anim-entrada relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[6px] border bg-white transition {{ $activo ? 'border-[#002B56] shadow-[0_6px_18px_rgba(13,43,94,.18)]' : 'border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,.06)] hover:shadow-[0_6px_18px_rgba(13,43,94,.12)]' }}">
+     class="anim-entrada relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[6px] border transition {{ $yaEnCarrito ? 'bg-[#DCE8F5]' : 'bg-white' }} {{ $activo ? 'border-[#002B56] shadow-[0_6px_18px_rgba(13,43,94,.18)]' : 'border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,.06)] hover:shadow-[0_6px_18px_rgba(13,43,94,.12)]' }}">
 
     @if(! empty($producto['oferta']))
         {{-- z-10: la imagen viene después en el DOM y si no la tapa. --}}
@@ -34,8 +39,8 @@
         </span>
     @endif
 
-    <div class="flex h-[288px] w-full items-center justify-center max-sm:h-[220px] {{ ! empty($producto['imagen']) ? 'cursor-zoom-in' : '' }}"
-         x-data @click.stop="$dispatch('abrir-visor', { imagenes: @js($producto['imagenes'] ?? array_filter([$producto['imagen'] ?? null])), titulo: @js($producto['codigo']) })">
+    {{-- La imagen no abre el visor: el clic sigue a la card y muestra el producto en la ficha. --}}
+    <div class="flex h-[288px] w-full items-center justify-center max-sm:h-[220px]">
         @include('livewire.vistas.productos.partials.producto-imagen', ['class' => 'h-full w-full', 'src' => $producto['imagen'] ?? null, 'alt' => $producto['codigo']])
     </div>
 
@@ -58,6 +63,8 @@
             {{ $producto['nombre'] }}
         </a>
 
+        {{-- Precios, stock y carrito, sólo con sesión de cliente o vendedor. --}}
+        @auth('sitio')
         <div class="mt-auto">
             <dl class="mt-[10px] space-y-1 text-[14px] text-black ">
                 <div class="flex items-baseline justify-between gap-3">
@@ -113,6 +120,12 @@
                     </button>
                 </div>
             </div>
+
+            {{-- Cantidad que ya está en el carrito, debajo del selector de cantidad. --}}
+            @if($yaEnCarrito)
+                <p class="mt-2 text-right text-[13px] font-semibold text-[#002B56]">({{ $yaEnCarrito }} en el carrito)</p>
+            @endif
         </div>
+        @endauth
     </div>
 </div>

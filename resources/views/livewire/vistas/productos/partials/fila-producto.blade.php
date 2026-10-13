@@ -5,6 +5,8 @@
     $clave = ProductosPage::clave($producto['codigo']);
     $cantidad = max(1, (int) ($cantidades[$clave] ?? 1));
     $activo = $seleccionado === $producto['codigo'];
+    // Ya está en el carrito: fondo celeste y la cantidad junto al código.
+    $yaEnCarrito = (int) (($enCarrito ?? [])[$producto['codigo']] ?? 0);
     $stockColor = match ($producto['stock']) {
         'verde' => 'bg-[#2FBF4B]',
         'amarillo' => 'bg-[#F2C438]',
@@ -19,16 +21,19 @@
     $retraso = min($loop->index ?? 0, 14) * 35;
 @endphp
 
-{{-- En mobile, al tocar la fila se abre la ficha como panel inferior (ver panel-detalle). --}}
+{{-- En computadora, tocar la fila la muestra en la ficha de la derecha; en pantallas
+     sin ficha al costado (celular, tablet) lleva directo al detalle del producto. --}}
 <tr wire:key="fila-{{ $clave }}"
-    x-data @click="$dispatch('abrir-ficha')"
+    x-data
+    @click="window.matchMedia('(max-width: 1023px)').matches
+        ? Livewire.navigate(@js(route('producto', ['codigo' => $producto['codigo']])))
+        : $wire.seleccionar(@js($producto['codigo']))"
     style="--retraso: {{ $retraso }}"
-    class="anim-fila cursor-pointer border-b border-slate-200 align-middle transition {{ $activo ? 'bg-[#002B56]/[.04]' : 'hover:bg-slate-50' }}"
-    wire:click="seleccionar('{{ $producto['codigo'] }}')">
+    class="anim-fila cursor-pointer border-b border-slate-200 align-middle transition {{ $yaEnCarrito ? 'bg-[#DCE8F5]' : ($activo ? 'bg-[#002B56]/[.04]' : 'hover:bg-slate-50') }}">
 
     <td class="w-[76px] px-2 py-3">
-        <div class="flex h-[54px] w-[54px] items-center justify-center rounded-[4px] border border-slate-200 {{ ! empty($producto['imagen']) ? 'cursor-zoom-in' : '' }}"
-             x-data @click.stop="$dispatch('abrir-visor', { imagenes: @js($producto['imagenes'] ?? array_filter([$producto['imagen'] ?? null])), titulo: @js($producto['codigo']) })">
+        {{-- La imagen no abre el visor: el clic sigue a la fila y muestra el producto en la ficha. --}}
+        <div class="flex h-[54px] w-[54px] items-center justify-center rounded-[4px] border border-slate-200">
             @include('livewire.vistas.productos.partials.producto-imagen', ['class' => 'h-full w-full', 'src' => $producto['imagen'] ?? null, 'alt' => $producto['codigo']])
         </div>
     </td>
@@ -71,6 +76,9 @@
                 </button>
             </div>
         </div>
+        @if($yaEnCarrito)
+            <span class="mt-1 block whitespace-nowrap text-center text-[12px] font-semibold text-[#002B56]">({{ $yaEnCarrito }} en el carrito)</span>
+        @endif
     </td>
 
     @unless($mostrador)

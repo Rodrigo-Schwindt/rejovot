@@ -2,6 +2,7 @@
 
 namespace App\Services\Catalogo;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\Odoo\OdooCatalog;
@@ -20,6 +21,12 @@ class GuardarProductos
     /** @var array<int, int>|null odoo_id de categoría => id local */
     private ?array $categorias = null;
 
+    /** @var array<int, int>|null odoo_id de categoría ecommerce => id de marca */
+    private ?array $marcas = null;
+
+    /** @var array<int, int>|null lo mismo, con las que no son marca (NOVEDADES) */
+    private ?array $categoriasWeb = null;
+
     public function __construct(private OdooCatalog $catalog)
     {
     }
@@ -31,6 +38,8 @@ class GuardarProductos
     {
         $fallidos = [];
         $categorias = $this->categorias ??= Category::pluck('id', 'odoo_id')->all();
+        $marcas = $this->marcas ??= Brand::mapa();
+        $categoriasWeb = $this->categoriasWeb ??= Brand::mapa(soloMarcas: false);
 
         // La fecha que cuenta para el sync incremental es la más nueva entre la
         // variante y su plantilla (ahí se despublica o se cambia el precio).
@@ -38,13 +47,13 @@ class GuardarProductos
             array_filter(array_map(fn (array $row) => $row['product_tmpl_id'][0] ?? null, $rows)),
         );
 
-        DB::transaction(function () use ($rows, $categorias, $plantillas, &$fallidos) {
+        DB::transaction(function () use ($rows, $categorias, $marcas, $categoriasWeb, $plantillas, &$fallidos) {
             foreach ($rows as $row) {
                 $tmplId = $row['product_tmpl_id'][0] ?? null;
                 $categoriaOdoo = $row['categ_id'][0] ?? null;
 
                 try {
-                    Product::updateOrCreate(['odoo_id' => $row['id']], [
+                    $producto = Product::updateOrCreate(['odoo_id' => $row['id']], [
                         'odoo_tmpl_id' => $tmplId,
                         // Hay un producto con un texto largo cargado como código.
                         'code' => $this->recortar($row['default_code'], 120),
@@ -53,6 +62,8 @@ class GuardarProductos
                         'type' => $row['type'] ?: null,
                         'extra_image_ids' => $row['product_template_image_ids'] ?: null,
                         'category_id' => $categorias[$categoriaOdoo] ?? null,
+                        // La marca es la categoría de ecommerce (ver catalogo:marcas).
+                        'brand_id' => Brand::deCategorias($row['public_categ_ids'] ?? [], $marcas),
                         // lst_price_with_margin ya es el precio de la tarifa pública.
                         'list_price' => $row['lst_price_with_margin'] ?? 0,
                         'tax_percent' => $this->iva($row['taxes_id'] ?? []),
@@ -61,6 +72,9 @@ class GuardarProductos
                         'published' => (bool) $row['website_published'],
                         'odoo_write_date' => max($row['write_date'], $plantillas[$tmplId] ?? ''),
                     ]);
+
+                    // Todas sus categorías de ecommerce (marca y NOVEDADES): los filtros.
+                    $producto->categoriasWeb()->sync(Brand::categoriasDe($row['public_categ_ids'] ?? [], $categoriasWeb));
                 } catch (\Throwable $e) {
                     // Una fila rara no puede cortar una sincronización de 55k.
                     $fallidos[] = $row['id'] . ': ' . $e->getMessage();

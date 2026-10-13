@@ -106,6 +106,11 @@ class EnviarPedido
         string $observaciones,
         array $quedan,
     ): void {
+        // Apagado desde el admin (Contacto): el pedido se hace igual, sin mails.
+        if (! \App\Models\Contact::avisaPedidos()) {
+            return;
+        }
+
         $destinos = Destinatarios::delCliente($cliente);
 
         if (! $destinos) {

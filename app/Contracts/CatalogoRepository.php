@@ -18,8 +18,8 @@ interface CatalogoRepository
     /** Clientes disponibles para el selector superior. */
     public function clientes(): array;
 
-    /** Opciones de los combos del buscador. */
-    public function filtros(): array;
+    /** Opciones de los combos; los rubros se limitan a la marca elegida. */
+    public function filtros(string $marca = ''): array;
 
     /** Árbol de la búsqueda por vehículo: marca => modelos. */
     public function vehiculos(): array;

@@ -77,6 +77,12 @@ class Product extends Model
         return $this->relacionados()->wherePivot('tipo', 'accesorio');
     }
 
+    /** Categorías de ecommerce del producto (su marca y, si tiene, NOVEDADES). */
+    public function categoriasWeb(): BelongsToMany
+    {
+        return $this->belongsToMany(Brand::class);
+    }
+
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);

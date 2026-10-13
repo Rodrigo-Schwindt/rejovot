@@ -26,18 +26,27 @@ class CuentaDemo implements CuentaRepository
         return null;
     }
 
-    public function movimientos(): array
+    public function tieneInfo(): bool
     {
+        return false;
+    }
+
+    public function movimientos(string $cuenta = '', int $limite = 50): array
+    {
+        if ($cuenta === 'info') {
+            return [];
+        }
+
         return [
             [
                 'emision' => '05/09/2026',
                 'vencimiento' => '05/10/2026',
                 'tipo' => 'RCC',
                 'numero' => '43107',
-                'haber' => 33765.00,
+                'importe' => 33765.00,
+                'pago_a_cuenta' => 0.00,
                 'saldo' => 33765.00,
-                'importe_origen' => 172702.39,
-                'importe_bruto_origen' => 172702.39,
+                'a_favor' => false,
                 'vencido' => false,
             ],
             [
@@ -45,10 +54,10 @@ class CuentaDemo implements CuentaRepository
                 'vencimiento' => '27/08/2026',
                 'tipo' => 'RCC',
                 'numero' => '43102',
-                'haber' => 128450.75,
+                'importe' => 128450.75,
+                'pago_a_cuenta' => 0.00,
                 'saldo' => 128450.75,
-                'importe_origen' => 128450.75,
-                'importe_bruto_origen' => 128450.75,
+                'a_favor' => false,
                 'vencido' => true,
             ],
             [
@@ -56,10 +65,10 @@ class CuentaDemo implements CuentaRepository
                 'vencimiento' => '21/09/2026',
                 'tipo' => 'FAC',
                 'numero' => '00012845',
-                'haber' => 250924.83,
+                'importe' => 250924.83,
+                'pago_a_cuenta' => 0.00,
                 'saldo' => 250924.83,
-                'importe_origen' => 250924.83,
-                'importe_bruto_origen' => 250924.83,
+                'a_favor' => false,
                 'vencido' => false,
             ],
             [
@@ -67,10 +76,10 @@ class CuentaDemo implements CuentaRepository
                 'vencimiento' => '14/08/2026',
                 'tipo' => 'FAC',
                 'numero' => '00012790',
-                'haber' => 180382.22,
+                'importe' => 180382.22,
+                'pago_a_cuenta' => 0.00,
                 'saldo' => 180382.22,
-                'importe_origen' => 180382.22,
-                'importe_bruto_origen' => 180382.22,
+                'a_favor' => false,
                 'vencido' => true,
             ],
             [
@@ -78,10 +87,10 @@ class CuentaDemo implements CuentaRepository
                 'vencimiento' => '07/08/2026',
                 'tipo' => 'FAC',
                 'numero' => '00012701',
-                'haber' => 96431.05,
+                'importe' => 96431.05,
+                'pago_a_cuenta' => 0.00,
                 'saldo' => 96431.05,
-                'importe_origen' => 96431.05,
-                'importe_bruto_origen' => 96431.05,
+                'a_favor' => false,
                 'vencido' => true,
             ],
             [
@@ -89,10 +98,10 @@ class CuentaDemo implements CuentaRepository
                 'vencimiento' => '29/08/2026',
                 'tipo' => 'NC',
                 'numero' => '00000341',
-                'haber' => -18540.60,
-                'saldo' => -18540.60,
-                'importe_origen' => -18540.60,
-                'importe_bruto_origen' => -18540.60,
+                'importe' => 18540.60,
+                'pago_a_cuenta' => 0.00,
+                'saldo' => 18540.60,
+                'a_favor' => true,
                 'vencido' => false,
             ],
             [
@@ -100,10 +109,10 @@ class CuentaDemo implements CuentaRepository
                 'vencimiento' => '17/08/2026',
                 'tipo' => 'RCC',
                 'numero' => '42980',
-                'haber' => 42112.35,
+                'importe' => 42112.35,
+                'pago_a_cuenta' => 0.00,
                 'saldo' => 42112.35,
-                'importe_origen' => 42112.35,
-                'importe_bruto_origen' => 42112.35,
+                'a_favor' => false,
                 'vencido' => true,
             ],
         ];

@@ -33,6 +33,22 @@
             </div>
         </div>
 
+        {{-- Mails de pedidos: se pueden apagar (todavía no hay una casilla para eso). --}}
+        <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+            <span class="sec-label">Avisos de pedidos</span>
+            <label class="mt-3 flex cursor-pointer items-start gap-3">
+                <input type="checkbox" name="avisar_pedidos" value="1" @checked(old('avisar_pedidos', $contact?->avisar_pedidos ?? true))
+                       class="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#002B56]">
+                <span class="text-sm text-slate-700">
+                    <span class="font-medium text-slate-800">Avisar por mail cada pedido</span>
+                    <span class="block text-slate-500">
+                        Cuando alguien hace un pedido desde la web, se manda un mail al cliente, a su vendedor y al mail de contacto.
+                        Desactivado, los pedidos llegan igual a Odoo, pero sin mails.
+                    </span>
+                </span>
+            </label>
+        </div>
+
         <template id="info-item-template">
             @include('livewire.contacto.partials.info-item-row', ['item' => null])
         </template>

@@ -18,4 +18,9 @@ return [
         'retiro por rejovot mostrador' => 'Retiro por mostrador',
         'entrega x logistica' => 'Envío por logística',
     ],
+
+    // La forma de entrega que va primera y viene elegida por defecto en el
+    // carrito: la que contiene este texto en el nombre que se muestra. El resto
+    // sigue en el orden de Odoo.
+    'envio_por_defecto' => 'logística',
 ];

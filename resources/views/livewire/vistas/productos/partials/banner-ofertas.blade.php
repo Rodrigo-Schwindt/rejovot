@@ -55,9 +55,13 @@
 
                         <div class="min-w-0 flex-1 text-center lg:text-left">
                             <a wire:navigate href="{{ route('producto', ['codigo' => $oferta['codigo']]) }}"
+                               class="mb-1 block text-[17px] font-bold tracking-wide hover:underline">{{ $oferta['codigo'] }}</a>
+                            <a wire:navigate href="{{ route('producto', ['codigo' => $oferta['codigo']]) }}"
                                class="line-clamp-3 text-[18px] font-normal leading-[130%] transition hover:underline lg:block lg:h-[70px] lg:max-w-[460px]">
                                 {{ $oferta['nombre'] }}
                             </a>
+                            {{-- Precio y botón, sólo con sesión de cliente o vendedor. --}}
+                            @auth('sitio')
                             <p class="mt-2 flex flex-wrap items-baseline justify-center gap-2 lg:justify-start">
                                 @if($oferta['precio_ant'] ?? null)
                                     <span class="text-[15px] text-white line-through">{{ Precio::ar($oferta['precio_ant']) }}</span>
@@ -68,12 +72,15 @@
                                     <span class="text-[13px] text-white">· hasta el {{ $oferta['hasta']->format('d/m') }}</span>
                                 @endif
                             </p>
+                            @endauth
                         </div>
 
+                        @auth('sitio')
                         <button type="button" wire:click="agregar('{{ $oferta['codigo'] }}')"
                                 class="shrink-0 cursor-pointer rounded bg-[#E11A22] px-5 py-3 text-[15px] font-bold uppercase tracking-wide text-white transition hover:bg-[#B8141B] max-sm:w-full">
-                            + Agregar 
+                            + Agregar
                         </button>
+                        @endauth
                     </div>
                 @endforeach
                 </div>

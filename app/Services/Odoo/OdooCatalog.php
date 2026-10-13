@@ -43,6 +43,25 @@ class OdooCatalog
         ], ['amount']);
     }
 
+    /** Categorías de ecommerce: son las marcas del sitio. */
+    public function categoriasEcommerce(): array
+    {
+        return $this->odoo->searchRead('product.public.category', [], ['name', 'sequence'], [
+            'order' => 'sequence asc, id asc',
+        ]);
+    }
+
+    /** Las categorías de ecommerce de una página de productos. */
+    public function categoriasDeProductos(int $offset, int $limit = 5000): array
+    {
+        return $this->odoo->searchRead('product.product', $this->dominioBase(), ['public_categ_ids'], [
+            'offset' => $offset,
+            'limit' => $limit,
+            'order' => 'id asc',
+            'context' => ['active_test' => false],
+        ]);
+    }
+
     public function categories(): array
     {
         return $this->odoo->searchRead('product.category', [], ['name', 'complete_name', 'parent_id']);
@@ -65,6 +84,8 @@ class OdooCatalog
         'lst_price_with_margin',
         // «Impuestos cliente»: define el IVA de la línea.
         'taxes_id',
+        // Categorías de ecommerce: de ahí sale la marca.
+        'public_categ_ids',
         'active',
         'website_published',
         'write_date',

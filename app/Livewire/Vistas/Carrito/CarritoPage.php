@@ -50,6 +50,18 @@ class CarritoPage extends Component
         $this->dispatch('show-toast', message: 'El carrito se actualizó desde otra sesión de este cliente.', type: 'success');
     }
 
+    /** Pasa al carrito principal o al alternativo; los dos quedan guardados. */
+    public function usarCarrito(string $cual, Carrito $carrito): void
+    {
+        $carrito->usar($cual);
+        $this->sincronizarCantidades($carrito);
+        $this->mensaje = '';
+
+        $this->dispatch('show-toast', type: 'success', message: $carrito->esAlternativo()
+            ? 'Estás en el carrito alternativo.'
+            : 'Estás en el carrito principal.');
+    }
+
     /** Livewire avisa qué clave del array cambió. */
     public function updatedCantidades($value, $key): void
     {
@@ -100,7 +112,7 @@ class CarritoPage extends Component
 
         // El carrito es compartido: si dos personas tocan «Realizar pedido» a la
         // vez, una lo envía y la otra se entera, en vez de mandarlo dos veces.
-        $lock = Cache::lock('pedido-cliente-' . $clienteActivo->actual()->id, 120);
+        $lock = Cache::lock('pedido-cliente-' . $clienteActivo->actual()->id . '-' . $carrito->activo(), 120);
 
         if (! $lock->get()) {
             $this->dispatch('show-toast', message: 'Otra persona está enviando el pedido de este cliente en este momento.', type: 'error');
@@ -160,6 +172,7 @@ class CarritoPage extends Component
 
         return view('livewire.vistas.carrito.carrito-page', [
             'clienteActivo' => app(ClienteActivo::class)->actual(),
+            'carritoActivo' => $carrito->activo(),
             'descuentoLista' => app(\App\Services\Margenes\Margenes::class)->descuento(),
             'motivoBloqueo' => app(ClienteActivo::class)->motivo(),
             'items' => $carrito->items(),

@@ -56,11 +56,13 @@ class CatalogoDemo implements CatalogoRepository
         return [];
     }
 
-    public function filtros(): array
+    public function filtros(string $marca = ''): array
     {
         return [
             'marcas' => ['VMG', 'GACRI', 'OMER', 'CAUPLAS', 'BAIML'],
-            'rubros' => ['Refrigeración', 'Suspensión', 'Ventilación', 'Mangueras', 'Iluminación', 'Eléctricos', 'Correas'],
+            'rubros' => $marca === ''
+                ? ['Refrigeración', 'Suspensión', 'Ventilación', 'Mangueras', 'Iluminación', 'Eléctricos', 'Correas']
+                : collect($this->dataset())->where('marca', $marca)->pluck('rubro')->unique()->sort()->values()->all(),
             'tipos' => ['Bomba de agua', 'Polea', 'Soporte', 'Pala de ventilador', 'Manguera', 'Faro', 'Variador', 'Correa'],
             'marcas_vehiculo' => ['Mercedes Benz', 'Chevrolet', 'Daewoo', 'Peugeot', 'Citroën', 'Fiat', 'Alfa Romeo'],
             'modelos' => ['Sprinter', 'Blazer', 'Espero', 'Lanos', '306', 'Partner', 'Classic', 'Ducato', 'Saxo', '307', '504', '505'],

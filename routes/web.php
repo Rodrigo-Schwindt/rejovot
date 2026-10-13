@@ -52,16 +52,18 @@ Route::middleware('auth:sitio')->group(function () {
         ->whereNumber('move')->name('cuenta.comprobante');
     Route::get('/info-de-pagos', InfoPagosPage::class)->name('pagos');
 
+    // Precios y márgenes: sólo para clientes y vendedores.
+    Route::get('/margenes', MargenesPage::class)->name('margenes');
+    Route::get('/lista-de-precios', ListaPreciosPage::class)->name('precios');
+    Route::get('/lista-de-precios/{lista}/descargar', [ListasPreciosController::class, 'download'])->name('precios.descargar');
+    Route::get('/lista-de-precios/{lista}/ver', [ListasPreciosController::class, 'show'])->name('precios.ver');
+
     Route::get('/reclamos', ReclamosPage::class)->name('reclamos');
     Route::get('/reclamos/nuevo', NuevoReclamoPage::class)->name('reclamos.nuevo');
     Route::get('/reclamos/{reclamo}', ReclamoDetallePage::class)->whereNumber('reclamo')->name('reclamos.ver');
     Route::get('/reclamos/{reclamo}/fotos/{foto}', [FotoReclamoController::class, 'sitio'])
         ->whereNumber(['reclamo', 'foto'])->name('reclamos.foto');
 });
-Route::get('/margenes', MargenesPage::class)->name('margenes');
-Route::get('/lista-de-precios', ListaPreciosPage::class)->name('precios');
-Route::get('/lista-de-precios/{lista}/descargar', [ListasPreciosController::class, 'download'])->name('precios.descargar');
-Route::get('/lista-de-precios/{lista}/ver', [ListasPreciosController::class, 'show'])->name('precios.ver');
 
 /*
 |--------------------------------------------------------------------------
