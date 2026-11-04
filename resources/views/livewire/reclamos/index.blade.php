@@ -16,15 +16,15 @@
         @csrf
         <span class="sec-label">Aviso por mail</span>
         <p class="mt-2 text-sm text-slate-500">
-            Cada reclamo nuevo se manda a esta casilla, con las fotos adjuntas. También les llega al cliente y a su vendedor.
+            Cada garantía nueva se manda a esta casilla, con las fotos adjuntas. También les llega al cliente y a su vendedor.
         </p>
 
         <div class="mt-4 flex flex-wrap items-end gap-3">
             <div class="min-w-[280px] flex-1">
-                <label class="f-label" for="mail_reclamos">Casilla que recibe los reclamos</label>
+                <label class="f-label" for="mail_reclamos">Casilla que recibe las garantías</label>
                 <input type="email" id="mail_reclamos" name="mail_reclamos" class="f-input"
                        value="{{ old('mail_reclamos', $contacto?->mail_reclamos) }}"
-                       placeholder="{{ $contacto?->mail_adm ?: 'reclamos@rejovot.com.ar' }}">
+                       placeholder="{{ $contacto?->mail_adm ?: 'garantias@rejovot.com.ar' }}">
                 @error('mail_reclamos')<p class="mt-1 text-xs text-[#E11A22]">{{ $message }}</p>@enderror
             </div>
             <button type="submit" class="btn btn-primary">Guardar</button>
@@ -32,14 +32,14 @@
 
         @unless($contacto?->mail_reclamos)
             <p class="mt-2 text-xs text-slate-400">
-                Vacío: hoy los reclamos van al mail de contacto ({{ $contacto?->mail_adm ?: 'sin cargar' }}).
+                Vacío: hoy las garantías van al mail de contacto ({{ $contacto?->mail_adm ?: 'sin cargar' }}).
             </p>
         @endunless
     </form>
 
     <div>
         <h2 class="text-xl font-semibold text-slate-800">
-            Reclamos <span class="text-base font-normal text-slate-400">({{ $reclamos->total() }})</span>
+            Garantías <span class="text-base font-normal text-slate-400">({{ $reclamos->total() }})</span>
         </h2>
         <p class="mt-1 text-sm text-slate-500">
             Los que cargan los clientes desde el sitio. Al cambiar el estado o responder, el cliente recibe un mail.
@@ -65,7 +65,7 @@
             <div>
                 <label class="f-label" for="q">Buscar</label>
                 <input type="text" id="q" name="q" value="{{ $filtros['q'] }}" class="f-input"
-                       placeholder="N° de reclamo, cliente, factura o código de artículo">
+                       placeholder="N° de garantía, cliente, factura o código de artículo">
             </div>
             <div>
                 <label class="f-label" for="estado">Estado</label>
@@ -106,7 +106,7 @@
                                 <span class="block text-xs text-slate-400">Vendedor: {{ $reclamo->customer->salesperson->name }}</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-slate-600">{{ $reclamo->factura_numero }}</td>
+                        <td class="px-4 py-3 text-slate-600">{{ $reclamo->factura_numero ?: '—' }}</td>
                         <td class="px-4 py-3 text-center">{{ $reclamo->items_count }}</td>
                         <td class="px-4 py-3 text-xs text-slate-500">{{ $reclamo->created_at->format('d/m/Y H:i') }}</td>
                         <td class="px-4 py-3 text-center">
@@ -118,7 +118,7 @@
                     </tr>
                 @empty
                     <tr><td colspan="7" class="px-6 py-10 text-center text-sm text-slate-500">
-                        {{ $filtros['q'] !== '' || $filtros['estado'] !== '' ? 'Ningún reclamo coincide con esos filtros' : 'Todavía no llegó ningún reclamo' }}
+                        {{ $filtros['q'] !== '' || $filtros['estado'] !== '' ? 'Ninguna garantía coincide con esos filtros' : 'Todavía no llegó ninguna garantía' }}
                     </td></tr>
                 @endforelse
             </tbody>

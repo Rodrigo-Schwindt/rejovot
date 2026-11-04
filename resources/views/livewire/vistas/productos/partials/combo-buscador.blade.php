@@ -8,6 +8,8 @@
     $opciones = $opciones ?? [];
     $vacio = $vacio ?? 'Todos';
     $seleccionado = $seleccionado ?? '';
+    // La barra flotante de escritorio usa campos más bajos.
+    $alto = $alto ?? 'h-[46px]';
 @endphp
 
 <div wire:key="{{ $id }}-{{ md5(json_encode([$opciones, $seleccionado])) }}"
@@ -21,6 +23,7 @@
         },
         elegir(valor) {
             $wire.set('{{ $modelo }}', valor);
+            this.$dispatch('filtro-elegido');
             this.abierto = false;
             this.busqueda = '';
         },
@@ -30,7 +33,7 @@
      class="relative">
 
     <button type="button" @click="abierto = !abierto"
-            class="flex h-[46px] w-full cursor-pointer items-center justify-between gap-2 rounded-[4px] border border-white/15 bg-white px-3 text-left text-[14px] outline-none focus:border-[#E11A22]"
+            class="flex {{ $alto }} w-full cursor-pointer items-center justify-between gap-2 rounded-[4px] border border-white/15 bg-white px-3 text-left text-[14px] outline-none focus:border-[#E11A22]"
             :aria-expanded="abierto" aria-haspopup="listbox">
         <span class="truncate {{ $seleccionado === '' ? 'text-slate-400' : 'text-slate-700' }}">
             {{ $seleccionado === '' ? $vacio : $seleccionado }}

@@ -98,6 +98,7 @@ class ProductoDetallePage extends Component
             : max(1, (int) ($this->cantidades[ProductosPage::clave($codigo)] ?? 1));
         $carrito->agregar($codigo, $cantidad);
 
+        $this->dispatch('carrito-cantidad', cantidad: $carrito->cantidadTotal());
         $this->dispatch('show-toast', message: "{$producto['codigo']} agregado al carrito.", type: 'success');
     }
 

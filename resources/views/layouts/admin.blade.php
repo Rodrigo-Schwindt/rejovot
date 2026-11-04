@@ -176,6 +176,11 @@
         </button>
 
         <nav class="custom-scroll flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
+            <a href="{{ route('admin.sliders.index') }}" class="nav-item {{ request()->routeIs('admin.sliders.*') ? 'active-link' : '' }}">
+                <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 11 4.5-4.5a1.5 1.5 0 0 1 2.1 0L15 16m-1.5-1.5 1-1a1.5 1.5 0 0 1 2.1 0L21 16M15 9.5h.01"/></svg>
+                Sliders
+            </a>
+
             <a href="{{ route('admin.catalogo.index') }}" class="nav-item {{ request()->routeIs('admin.catalogo.*') ? 'active-link' : '' }}">
                 <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7 12 3 4 7m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 Productos
@@ -210,7 +215,7 @@
 
             <a href="{{ route('admin.reclamos.index') }}" class="nav-item {{ request()->routeIs('admin.reclamos.*') ? 'active-link' : '' }}">
                 <svg class="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0 3.75h.008M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-                Reclamos
+                Garantías
                 @php $reclamosNuevos = \App\Models\Claim::where('estado', 'enviado')->count(); @endphp
                 @if($reclamosNuevos > 0)
                     <span class="ml-auto rounded-full bg-[#E11A22] px-2 py-0.5 text-[11px] font-bold text-white">{{ $reclamosNuevos }}</span>

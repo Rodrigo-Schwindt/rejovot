@@ -46,7 +46,8 @@ class IngresoController extends Controller
         // El login de Laravel rota el token de formularios; se conserva porque el
         // sitio comparte sesión con el admin (ver LoginController).
         $token = $request->session()->token();
-        Auth::guard('sitio')->login($usuario, $request->boolean('remember'));
+        // Siempre recordado: Rejovot no quiere que la sesión se cierre sola.
+        Auth::guard('sitio')->login($usuario, remember: true);
         $request->session()->put('_token', $token);
 
         return redirect()->intended(route('productos'));

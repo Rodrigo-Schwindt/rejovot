@@ -34,7 +34,8 @@ class LoginController extends Controller
         // mismo mail y es otro usuario.
         $credentials[] = fn ($query) => $query->whereIn('role', User::ROLES_PANEL);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        // Siempre recordado: Rejovot no quiere que la sesión se cierre sola.
+        if (Auth::attempt($credentials, remember: true)) {
             $request->session()->put('_token', $token);
 
             if (! auth()->user()->esDelPanel()) {

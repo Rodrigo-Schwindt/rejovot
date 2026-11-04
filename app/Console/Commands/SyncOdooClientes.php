@@ -109,23 +109,11 @@ class SyncOdooClientes extends Command
                 $portal = $portales[$row['id']] ?? null;
 
                 try {
-                    Customer::updateOrCreate(['odoo_id' => $row['id']], [
-                        'name' => mb_substr((string) $row['name'], 0, 255),
-                        'vat' => $row['vat'] ?: null,
-                        'email' => $row['email'] ?: null,
-                        'phone' => $row['phone'] ?: null,
-                        'city' => $row['city'] ?: null,
-                        'salesperson_id' => $vendedorOdoo ? ($vendedores[$vendedorOdoo] ?? null) : null,
-                        'pricelist_odoo_id' => $row['property_product_pricelist'][0] ?? null,
-                        'price_discount' => $row['price_discount'] ?? 0,
-                        'price_margin' => $row['price_margin'] ?? 0,
-                        'credit' => $row['credit'] ?? 0,
-                        'credit_limit' => $row['credit_limit'] ?? 0,
-                        'portal_login' => $portal,
-                        'has_portal' => (bool) $portal,
-                        'active' => (bool) $row['active'],
-                        'odoo_write_date' => $row['write_date'],
-                    ]);
+                    Customer::guardarDesdeOdoo(
+                        $row,
+                        $vendedorOdoo ? ($vendedores[$vendedorOdoo] ?? null) : null,
+                        $portal,
+                    );
                 } catch (\Throwable $e) {
                     $this->fallidos[] = $row['id'] . ': ' . $e->getMessage();
                 }

@@ -193,5 +193,6 @@ class CarritoPage extends Component
                 ProductosPage::clave($item['producto']['codigo']) => $item['cantidad'],
             ])
             ->all();
+        $this->dispatch('carrito-cantidad', cantidad: (int) array_sum($this->cantidades));
     }
 }

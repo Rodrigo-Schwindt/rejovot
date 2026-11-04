@@ -72,6 +72,8 @@ $tareas = [
     'marcas' => 'catalogo:marcas',
     'precios' => 'odoo:sync-precios',
     'lista' => 'precios:generar',
+    // Todos los clientes, no sólo lo modificado. No entra en «todas».
+    'clientes-completo' => ['odoo:sync-clientes', ['--full' => true]],
 ];
 
 // &cron=auto es lo que llama la tarea programada del hosting (con curl, cada
@@ -137,7 +139,9 @@ if (($_GET['cron'] ?? '') === 'auto') {
 }
 
 if (isset($_GET['cron'])) {
-    $elegidas = $_GET['cron'] === 'todas' ? $tareas : array_intersect_key($tareas, [$_GET['cron'] => true]);
+    $elegidas = $_GET['cron'] === 'todas'
+        ? array_filter($tareas, 'is_string')
+        : array_intersect_key($tareas, [$_GET['cron'] => true]);
 
     if (! $elegidas) {
         exit("Tarea desconocida. Opciones: todas, " . implode(', ', array_keys($tareas)) . "\n");
@@ -147,13 +151,15 @@ if (isset($_GET['cron'])) {
     ignore_user_abort(true);
 
     foreach ($elegidas as $comando) {
-        echo "== php artisan {$comando}\n";
+        [$comando, $opciones] = is_array($comando) ? $comando : [$comando, []];
+
+        echo "== php artisan {$comando}" . ($opciones ? ' ' . implode(' ', array_keys($opciones)) : '') . "\n";
         @ob_flush();
         flush();
 
         try {
             $inicio = microtime(true);
-            $codigo = $kernel->call($comando);
+            $codigo = $kernel->call($comando, $opciones);
             echo trim($kernel->output()) . "\n";
             echo ($codigo === 0 ? 'OK' : "Terminó con código {$codigo}") . ' (' . round(microtime(true) - $inicio) . "s)\n\n";
         } catch (Throwable $e) {

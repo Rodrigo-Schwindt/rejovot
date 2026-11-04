@@ -41,6 +41,31 @@ class Customer extends Model
         ];
     }
 
+    /**
+     * Guarda o actualiza el cliente con una fila de res.partner (los campos de
+     * OdooClientes::CAMPOS). Lo usan el sync y el ingreso.
+     */
+    public static function guardarDesdeOdoo(array $row, ?int $salespersonId, ?string $portalLogin): self
+    {
+        return self::updateOrCreate(['odoo_id' => $row['id']], [
+            'name' => mb_substr((string) $row['name'], 0, 255),
+            'vat' => $row['vat'] ?: null,
+            'email' => $row['email'] ?: null,
+            'phone' => $row['phone'] ?: null,
+            'city' => $row['city'] ?: null,
+            'salesperson_id' => $salespersonId,
+            'pricelist_odoo_id' => $row['property_product_pricelist'][0] ?? null,
+            'price_discount' => $row['price_discount'] ?? 0,
+            'price_margin' => $row['price_margin'] ?? 0,
+            'credit' => $row['credit'] ?? 0,
+            'credit_limit' => $row['credit_limit'] ?? 0,
+            'portal_login' => $portalLogin,
+            'has_portal' => (bool) $portalLogin,
+            'active' => (bool) $row['active'],
+            'odoo_write_date' => $row['write_date'],
+        ]);
+    }
+
     public function salesperson(): BelongsTo
     {
         return $this->belongsTo(Salesperson::class);

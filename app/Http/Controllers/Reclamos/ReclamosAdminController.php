@@ -69,8 +69,8 @@ class ReclamosAdminController extends Controller
         $contacto->save();
 
         return back()->with('success', $contacto->mail_reclamos
-            ? "Los reclamos nuevos van a llegar a {$contacto->mail_reclamos}."
-            : 'Sin casilla propia: los reclamos llegan al mail de contacto.');
+            ? "Las garantías nuevas van a llegar a {$contacto->mail_reclamos}."
+            : 'Sin casilla propia: las garantías llegan al mail de contacto.');
     }
 
     public function show(Claim $reclamo)
@@ -106,8 +106,8 @@ class ReclamosAdminController extends Controller
         }
 
         return back()->with('success', $cambioEstado
-            ? "Reclamo {$reclamo->numero} pasó a «{$reclamo->estado_nombre}». Se le avisó al cliente."
-            : 'Reclamo actualizado.');
+            ? "Garantía {$reclamo->numero} pasó a «{$reclamo->estado_nombre}». Se le avisó al cliente."
+            : 'Garantía actualizada.');
     }
 
     private function avisarAlCliente(Claim $reclamo): void

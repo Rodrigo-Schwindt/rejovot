@@ -84,7 +84,11 @@ class NuevoReclamoPage extends Component
         $factura = $this->facturaElegida();
         $this->lineasFactura = [];
 
+        // «Sin factura» o un número escrito a mano: no queda la fecha de la
+        // factura elegida antes (la de una escrita a mano se carga a mano).
         if (! $factura) {
+            $this->facturaFecha = '';
+
             return;
         }
 
@@ -146,7 +150,8 @@ class NuevoReclamoPage extends Component
     protected function rules(): array
     {
         return [
-            'facturaNumero' => ['required', 'string', 'max:60'],
+            // Opcional: se puede cargar una garantía sin factura.
+            'facturaNumero' => ['nullable', 'string', 'max:60'],
             'facturaFecha' => ['nullable', 'date', 'before_or_equal:today'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.codigo' => ['required', 'string', 'max:120'],
@@ -160,7 +165,6 @@ class NuevoReclamoPage extends Component
     protected function messages(): array
     {
         return [
-            'facturaNumero.required' => 'Indicá la factura.',
             'facturaFecha.before_or_equal' => 'La fecha de la factura no puede ser futura.',
             'items.*.codigo.required' => 'Indicá el código del artículo.',
             'items.*.cantidad.required' => 'Indicá la cantidad.',
@@ -196,7 +200,7 @@ class NuevoReclamoPage extends Component
                 'customer_id' => $cliente->id,
                 'user_id' => auth('sitio')->id(),
                 'fecha' => now()->toDateString(),
-                'factura_numero' => trim($this->facturaNumero),
+                'factura_numero' => trim($this->facturaNumero) ?: null,
                 'factura_fecha' => $this->facturaFecha ?: null,
                 'factura_odoo_id' => $factura['id'] ?? null,
                 'estado' => 'enviado',
@@ -230,7 +234,7 @@ class NuevoReclamoPage extends Component
 
         $this->avisar($reclamo);
 
-        session()->flash('toast', "Recibimos tu reclamo {$reclamo->numero}. Te avisamos por mail cuando cambie de estado.");
+        session()->flash('toast', "Recibimos tu garantía {$reclamo->numero}. Te avisamos por mail cuando cambie de estado.");
 
         return $this->redirectRoute('reclamos.ver', $reclamo, navigate: true);
     }

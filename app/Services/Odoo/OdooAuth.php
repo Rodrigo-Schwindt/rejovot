@@ -78,11 +78,16 @@ class OdooAuth
         ]);
     }
 
-    /** Usuario de portal: es un cliente. Tiene que estar sincronizado. */
+    /**
+     * Usuario de portal: es un cliente. Si el sync todavía no lo bajó (recién
+     * dado de alta en Odoo), se trae en el momento para que pueda entrar ya.
+     */
     protected function comoCliente(int $uid, array $datos): ?User
     {
         $partnerId = $datos['partner_id'][0] ?? null;
-        $cliente = $partnerId ? Customer::where('odoo_id', $partnerId)->first() : null;
+        $cliente = $partnerId
+            ? (Customer::where('odoo_id', $partnerId)->first() ?? $this->traerCliente($partnerId, $datos['login']))
+            : null;
 
         if (! $cliente) {
             return null;
@@ -92,6 +97,27 @@ class OdooAuth
             'customer_id' => $cliente->id,
             'salesperson_id' => null,
         ]);
+    }
+
+    protected function traerCliente(int $partnerId, string $login): ?Customer
+    {
+        try {
+            $row = app(OdooClientes::class)->cliente($partnerId);
+        } catch (OdooException) {
+            return null;
+        }
+
+        if (! $row) {
+            return null;
+        }
+
+        $vendedorOdoo = $row['user_id'][0] ?? null;
+
+        return Customer::guardarDesdeOdoo(
+            $row,
+            $vendedorOdoo ? Salesperson::where('odoo_id', $vendedorOdoo)->value('id') : null,
+            $login,
+        );
     }
 
     protected function guardarUsuario(int $uid, array $datos, string $rol, array $extra): User

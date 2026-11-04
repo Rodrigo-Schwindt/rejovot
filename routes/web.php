@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cuenta\ClienteActivoController;
 use App\Http\Controllers\Cuenta\ComprobantesController as CuentaComprobantesController;
 use App\Http\Controllers\Clientes\ClientesAdminController;
 use App\Http\Controllers\Reclamos\FotoReclamoController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Newsletter\NewsletterAdminController;
 use App\Http\Controllers\Pagos\ComprobantesController;
 use App\Http\Controllers\Pagos\CuentasBancariasController;
 use App\Http\Controllers\Precios\ListasPreciosController;
+use App\Http\Controllers\Sliders\SlidersController;
 use App\Http\Controllers\Usuarios\UsuariosController;
 use App\Livewire\Vistas\Carrito\CarritoPage;
 use App\Livewire\Vistas\Cuenta\EstadoCuentaPage;
@@ -42,7 +44,6 @@ Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('/productos', ProductosPage::class)->name('productos');
 // Hay códigos con barra («6246/FF.0321»): el parámetro toma el resto de la URL.
 Route::get('/productos/{codigo}', ProductoDetallePage::class)->where('codigo', '.+')->name('producto');
-Route::get('/busqueda-por-vehiculo', BusquedaVehiculoPage::class)->name('vehiculos');
 // Sólo con sesión del sitio: sin cliente o vendedor no hay nada que mostrar.
 Route::middleware('auth:sitio')->group(function () {
     Route::get('/carrito', CarritoPage::class)->name('carrito');
@@ -52,7 +53,8 @@ Route::middleware('auth:sitio')->group(function () {
         ->whereNumber('move')->name('cuenta.comprobante');
     Route::get('/info-de-pagos', InfoPagosPage::class)->name('pagos');
 
-    // Precios y márgenes: sólo para clientes y vendedores.
+    // Precios, márgenes y búsqueda por marca: sólo para clientes y vendedores.
+    Route::get('/busqueda-por-vehiculo', BusquedaVehiculoPage::class)->name('vehiculos');
     Route::get('/margenes', MargenesPage::class)->name('margenes');
     Route::get('/lista-de-precios', ListaPreciosPage::class)->name('precios');
     Route::get('/lista-de-precios/{lista}/descargar', [ListasPreciosController::class, 'download'])->name('precios.descargar');
@@ -85,6 +87,7 @@ Route::middleware('guest')->group(function () {
 Route::get('/ingresar', [IngresoController::class, 'formulario'])->name('ingresar');
 Route::post('/ingresar', [IngresoController::class, 'ingresar'])->name('ingresar.post');
 Route::post('/salir', [IngresoController::class, 'salir'])->middleware('auth:sitio')->name('salir');
+Route::post('/cliente/elegir', [ClienteActivoController::class, 'elegir'])->middleware('auth:sitio')->name('cliente.elegir');
 
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -96,6 +99,14 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 
 Route::middleware(['admin', 'viewer.readonly'])->prefix('admin')->group(function () {
     Route::get('/', fn () => redirect()->route('admin.contacto'))->name('admin');
+
+    Route::get('/sliders', [SlidersController::class, 'index'])->name('admin.sliders.index');
+    Route::get('/sliders/create', [SlidersController::class, 'create'])->name('admin.sliders.create');
+    Route::post('/sliders', [SlidersController::class, 'store'])->name('admin.sliders.store');
+    Route::get('/sliders/{slider}/edit', [SlidersController::class, 'edit'])->name('admin.sliders.edit');
+    Route::patch('/sliders/{slider}', [SlidersController::class, 'update'])->name('admin.sliders.update');
+    Route::patch('/sliders/{slider}/estado', [SlidersController::class, 'toggle'])->name('admin.sliders.toggle');
+    Route::delete('/sliders/{slider}', [SlidersController::class, 'destroy'])->name('admin.sliders.destroy');
 
     Route::get('/productos', [ProductosAdminController::class, 'index'])->name('admin.catalogo.index');
     Route::patch('/productos/{producto}/ocultar', [ProductosAdminController::class, 'ocultar'])->name('admin.catalogo.ocultar');

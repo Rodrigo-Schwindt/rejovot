@@ -20,7 +20,7 @@ class ReclamoCreadoMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject("Reclamo {$this->reclamo->numero} · {$this->reclamo->customer->name}")
+        return $this->subject("Garantía {$this->reclamo->numero} · {$this->reclamo->customer->name}")
             ->view('emails.reclamo-creado')
             ->with(['reclamo' => $this->reclamo]);
     }

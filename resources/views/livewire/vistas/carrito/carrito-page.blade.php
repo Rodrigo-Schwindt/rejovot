@@ -40,8 +40,15 @@
                 @endif
             </p>
 
-            <div class="anim-entrada mb-5" style="--retraso: 80">
+            <div class="anim-entrada mb-5 flex flex-wrap items-center justify-between gap-3" style="--retraso: 80">
                 @include('livewire.vistas.carrito.partials.switch-carrito')
+
+                {{-- Unidades de todos los productos cargados en este carrito. --}}
+                @if($items)
+                    <p class="text-[15px] text-slate-700">
+                        Total productos: <strong class="text-[#002B56]">{{ number_format(collect($items)->sum('cantidad'), 0, ',', '.') }}</strong>
+                    </p>
+                @endif
             </div>
         @else
             <p class="anim-entrada mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[#E11A22] bg-[#E11A22]/[.05] px-4 py-3 text-[15px] text-slate-700" style="--retraso: 60">

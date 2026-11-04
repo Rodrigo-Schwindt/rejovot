@@ -4,6 +4,7 @@ namespace App\Livewire\Vistas\Productos;
 
 use App\Contracts\CatalogoRepository;
 use App\Models\Customer;
+use App\Models\Slider;
 use App\Services\Carrito\Carrito;
 use App\Services\Catalogo\RefrescoEnVivo;
 use App\Services\Margenes\Margenes;
@@ -106,6 +107,7 @@ class ProductosPage extends Component
     {
         $this->itemsCarrito = $carrito->cantidadTotal();
         $this->firmaCarrito = $carrito->firma();
+        $this->dispatch('carrito-cantidad', cantidad: $this->itemsCarrito);
     }
 
     /** Los códigos traen puntos y wire:model los interpreta como anidado. */
@@ -285,6 +287,7 @@ class ProductosPage extends Component
             'paginador' => $paginador,
             'detalle' => $detalle,
             'ofertas' => $ofertas,
+            'sliders' => Slider::activos()->get(),
             'clienteElegido' => $clienteElegido,
             'carritoActivo' => app(Carrito::class)->activo(),
             // Lo que ya está en el carrito elegido: se marca en el listado.

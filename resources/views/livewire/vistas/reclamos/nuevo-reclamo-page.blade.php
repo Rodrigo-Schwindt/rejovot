@@ -5,41 +5,32 @@
 @endphp
 
 <div>
-    {{-- Nuevo reclamo sobre una compra. --}}
+    {{-- Nueva garantía (reclamo) sobre una compra. --}}
 
     <div class="mx-auto w-full max-w-[1300px] px-4 py-6 xl:px-6">
 
         <nav class="anim-entrada mb-6 text-[13px] text-slate-500" aria-label="Migas de pan">
             <a wire:navigate href="{{ route('home') }}" class="transition hover:text-[#002B56]">Inicio</a>
             <span class="mx-1.5 text-slate-400">&gt;</span>
-            <a wire:navigate href="{{ route('reclamos') }}" class="transition hover:text-[#002B56]">Reclamos</a>
+            <a wire:navigate href="{{ route('reclamos') }}" class="transition hover:text-[#002B56]">Garantías</a>
             <span class="mx-1.5 text-slate-400">&gt;</span>
-            <span class="text-slate-700">Nuevo reclamo</span>
+            <span class="text-slate-700">Nueva garantía</span>
         </nav>
 
-        <h1 class="anim-entrada mb-8 text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]" style="--retraso: 40">Nuevo reclamo</h1>
+        <h1 class="anim-entrada mb-8 text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]" style="--retraso: 40">Nueva garantía</h1>
 
         <form wire:submit="enviar" class="anim-entrada" style="--retraso: 90">
 
             {{-- Factura --}}
             <div class="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3">
                 <div>
-                    <label class="{{ $etiqueta }}">Fecha reclamo</label>
+                    <label class="{{ $etiqueta }}">Fecha</label>
                     <div class="{{ $campo }} flex cursor-not-allowed items-center bg-slate-50 text-slate-500">{{ $hoy }}</div>
                 </div>
 
                 <div>
-                    <label for="factura" class="{{ $etiqueta }}">N° factura</label>
-                    {{-- datalist: sugiere sus facturas pero deja escribir cualquier número. --}}
-                    <input id="factura" type="text" list="facturas-cliente" autocomplete="off"
-                           wire:model.live.debounce.400ms="facturaNumero"
-                           placeholder="{{ $facturas ? 'Elegí una factura o escribila' : 'Ingrese número de factura' }}"
-                           class="{{ $campo }}">
-                    <datalist id="facturas-cliente">
-                        @foreach($facturas as $factura)
-                            <option value="{{ $factura['numero'] }}">{{ $factura['fecha'] ? \Carbon\Carbon::parse($factura['fecha'])->format('d/m/Y') : '' }}</option>
-                        @endforeach
-                    </datalist>
+                    <label for="factura" class="{{ $etiqueta }}">N° factura <span class="text-[14px] font-normal text-slate-500">(opcional)</span></label>
+                    @include('livewire.vistas.reclamos.partials.combo-factura')
                     @error('facturaNumero')<p class="{{ $error }}">{{ $message }}</p>@enderror
                     @if($sinOdoo)
                         <p class="mt-1 text-[13px] text-slate-500">No pudimos traer tus facturas: escribí el número a mano.</p>

@@ -4,8 +4,8 @@
 <div class="animate-fadeIn space-y-6">
 
     <div>
-        <a href="{{ route('admin.reclamos.index') }}" class="text-xs font-medium text-slate-400 hover:text-slate-600">← Reclamos</a>
-        <h2 class="mt-1 text-xl font-semibold text-slate-800">Reclamo {{ $reclamo->numero }}</h2>
+        <a href="{{ route('admin.reclamos.index') }}" class="text-xs font-medium text-slate-400 hover:text-slate-600">← Garantías</a>
+        <h2 class="mt-1 text-xl font-semibold text-slate-800">Garantía {{ $reclamo->numero }}</h2>
         <p class="mt-1 text-sm text-slate-500">
             Enviado el {{ $reclamo->created_at->format('d/m/Y H:i') }}
             @if($reclamo->user?->esVendedor()) · lo cargó {{ $reclamo->user->name }} @endif
@@ -19,7 +19,7 @@
         <div class="space-y-6">
             {{-- Datos --}}
             <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-                <span class="sec-label">Datos del reclamo</span>
+                <span class="sec-label">Datos de la garantía</span>
                 <dl class="mt-3 grid grid-cols-1 gap-x-8 text-sm sm:grid-cols-2">
                     <div class="flex justify-between gap-4 border-b border-slate-50 py-2">
                         <dt class="text-slate-500">Cliente</dt>
@@ -36,10 +36,14 @@
                     <div class="flex justify-between gap-4 border-b border-slate-50 py-2">
                         <dt class="text-slate-500">Factura</dt>
                         <dd class="text-right font-medium text-slate-800">
-                            {{ $reclamo->factura_numero }}
-                            @unless($reclamo->factura_odoo_id)
-                                <span class="block text-xs font-normal text-amber-600">escrita a mano, no se validó en Odoo</span>
-                            @endunless
+                            @if($reclamo->factura_numero)
+                                {{ $reclamo->factura_numero }}
+                                @unless($reclamo->factura_odoo_id)
+                                    <span class="block text-xs font-normal text-amber-600">escrita a mano, no se validó en Odoo</span>
+                                @endunless
+                            @else
+                                <span class="font-normal text-slate-400">Sin factura</span>
+                            @endif
                         </dd>
                     </div>
                     <div class="flex justify-between gap-4 border-b border-slate-50 py-2">
@@ -109,7 +113,7 @@
             <div class="mt-4">
                 <label class="f-label" for="respuesta">Respuesta al cliente</label>
                 <textarea id="respuesta" name="respuesta" rows="6" class="f-input h-auto py-2"
-                          placeholder="La ve el cliente en «Ver reclamo» y le llega por mail.">{{ old('respuesta', $reclamo->respuesta) }}</textarea>
+                          placeholder="La ve el cliente en «Ver garantía» y le llega por mail.">{{ old('respuesta', $reclamo->respuesta) }}</textarea>
                 @error('respuesta')<p class="mt-1 text-xs text-[#E11A22]">{{ $message }}</p>@enderror
                 @if($reclamo->respondido_at)
                     <p class="mt-1 text-xs text-slate-400">Última respuesta: {{ $reclamo->respondido_at->format('d/m/Y H:i') }}</p>

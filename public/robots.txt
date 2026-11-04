@@ -9,5 +9,6 @@ Disallow: /info-de-pagos
 Disallow: /reclamos
 Disallow: /margenes
 Disallow: /lista-de-precios
+Disallow: /busqueda-por-vehiculo
 
 Sitemap: https://rejovot.com.ar/sitemap.xml

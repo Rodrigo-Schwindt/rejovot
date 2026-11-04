@@ -43,11 +43,6 @@
                            class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#002B56] focus:ring-3 focus:ring-[#002B56]/15">
                 </div>
 
-                <label class="flex items-center gap-2 text-sm text-slate-600">
-                    <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-slate-300 text-[#002B56]">
-                    Mantener sesión iniciada
-                </label>
-
                 <button type="submit"
                         class="w-full cursor-pointer rounded-lg bg-[#002B56] py-2.5 text-sm font-semibold text-white transition hover:bg-[#071B3D]">
                     Ingresar

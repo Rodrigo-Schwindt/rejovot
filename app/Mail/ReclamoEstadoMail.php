@@ -18,7 +18,7 @@ class ReclamoEstadoMail extends Mailable
 
     public function build(): self
     {
-        return $this->subject("Tu reclamo {$this->reclamo->numero}: {$this->reclamo->estado_nombre}")
+        return $this->subject("Tu garantía {$this->reclamo->numero}: {$this->reclamo->estado_nombre}")
             ->view('emails.reclamo-estado')
             ->with(['reclamo' => $this->reclamo]);
     }

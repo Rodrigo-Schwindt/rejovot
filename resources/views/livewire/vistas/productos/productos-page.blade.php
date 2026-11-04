@@ -19,24 +19,27 @@
     @include('livewire.vistas.productos.partials.banner-ofertas')
     @include('livewire.vistas.productos.partials.visor-imagenes')
 
-    <div class="mx-auto w-full max-w-[1300px] px-4 py-8 xl:px-6">
+    {{-- «fuera»: el panel de filtros ya quedó arriba, fuera de la pantalla.
+         Entonces aparece la barra fija (escritorio) o el botón flotante (celular). --}}
+    <div class="mx-auto w-full max-w-[1300px] px-4 py-8 xl:px-6"
+         x-data="{ fuera: false }"
+         x-init="new IntersectionObserver(([e]) => fuera = ! e.isIntersecting && e.boundingClientRect.top < 0, { rootMargin: '-72px 0px 0px 0px' }).observe($refs.filtros)">
 
-        <div class="anim-entrada">
-            @include('livewire.vistas.productos.partials.selector-cliente')
-        </div>
-
-        <div class="anim-entrada" style="--retraso: 80">
+        <div class="anim-entrada" style="--retraso: 80" x-ref="filtros">
             @include('livewire.vistas.productos.partials.filtros')
         </div>
+
+        @include('livewire.vistas.productos.partials.filtros-flotantes')
 
         <div id="catalogo" class="mt-6 grid grid-cols-1 gap-6 scroll-mt-6 lg:grid-cols-[minmax(0,1fr)_288px]">
             <div class="max-lg:min-w-0">
 
                 {{-- Sin sesión no hay precios: siempre cuadrícula y sin vista mostrador. --}}
                 @auth('sitio')
-                <div class="anim-entrada mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style="--retraso: 160">
-                    <div class="flex items-center gap-3 text-[14px] text-slate-700">
-                        <span class="{{ $vista === 'cuadricula' ? 'font-semibold text-slate-900' : '' }}">Cuadrícula</span>
+                {{-- En el celular: grilla texto | switch | texto, con los switches en la columna del medio. --}}
+                <div class="anim-entrada mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-3 sm:flex sm:flex-row sm:items-center sm:justify-between" style="--retraso: 160">
+                    <div class="flex items-center gap-3 text-[14px] text-slate-700 max-sm:contents">
+                        <span class="{{ $vista === 'cuadricula' ? 'font-semibold text-slate-900' : '' }} max-sm:justify-self-end">Cuadrícula</span>
                         <button type="button"
                                 wire:click="cambiarVista('{{ $vista === 'lista' ? 'cuadricula' : 'lista' }}')"
                                 class="relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer items-center rounded-full bg-[#002B56]"
@@ -47,11 +50,11 @@
                         <span class="{{ $vista === 'lista' ? 'font-semibold text-slate-900' : '' }}">Lista</span>
                     </div>
 
-                    @include('livewire.vistas.carrito.partials.switch-carrito')
+                    @include('livewire.vistas.carrito.partials.switch-carrito', ['enGrilla' => true])
 
-                    <label class="flex cursor-pointer items-center gap-3 text-[14px] text-slate-700">
+                    <label class="flex cursor-pointer items-center gap-3 text-[14px] text-slate-700 max-sm:contents">
                         {{-- Gris apagado; se pinta de azul recién cuando la vista mostrador está activa. --}}
-                        <span class="relative inline-flex h-[22px] w-[42px] shrink-0 items-center rounded-full transition-colors duration-300 {{ $mostrador ? 'bg-[#002B56]' : 'bg-slate-300' }}">
+                        <span class="relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer items-center rounded-full transition-colors duration-300 max-sm:col-start-2 {{ $mostrador ? 'bg-[#002B56]' : 'bg-slate-300' }}">
                             <input type="checkbox" wire:model.live="mostrador" class="peer sr-only">
                             <span class="absolute left-[3px] h-[16px] w-[16px] rounded-full bg-white transition-transform duration-300 ease-out {{ $mostrador ? 'translate-x-[20px]' : '' }}"></span>
                         </span>

@@ -1,9 +1,14 @@
 {{-- Carrito principal / alternativo. Cada persona elige con cuál trabaja; los dos
      quedan guardados. Lo usan Productos y Carrito (método usarCarrito). --}}
-@php $alternativo = $carritoActivo === \App\Services\Carrito\Carrito::ALTERNATIVO; @endphp
+@php
+    $alternativo = $carritoActivo === \App\Services\Carrito\Carrito::ALTERNATIVO;
+    // En la grilla centrada del celular (Productos) el contenedor desaparece y
+    // cada parte ocupa su columna: texto | switch | texto.
+    $enGrilla = $enGrilla ?? false;
+@endphp
 
-<div class="flex items-center gap-3 text-[14px] text-slate-700">
-    <span class="{{ $alternativo ? '' : 'font-semibold text-slate-900' }}">Carrito principal</span>
+<div class="flex items-center gap-3 text-[14px] text-slate-700 {{ $enGrilla ? 'max-sm:contents' : '' }}">
+    <span class="{{ $alternativo ? '' : 'font-semibold text-slate-900' }} {{ $enGrilla ? 'max-sm:justify-self-end' : '' }}">Carrito principal</span>
     <button type="button"
             wire:click="usarCarrito('{{ $alternativo ? 'principal' : 'alternativo' }}')"
             wire:loading.attr="disabled" wire:target="usarCarrito"

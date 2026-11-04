@@ -12,9 +12,9 @@ class Claim extends Model
     protected $table = 'claims';
 
     public const ESTADOS = [
-        'enviado' => 'Enviado',
-        'rechazado' => 'Rechazado',
-        'cerrado' => 'Cerrado',
+        'enviado' => 'Enviada',
+        'rechazado' => 'Rechazada',
+        'cerrado' => 'Cerrada',
         'nota_credito' => 'Nota de crédito',
     ];
 

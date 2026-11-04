@@ -14,18 +14,25 @@ class ListasPreciosController extends Controller
 {
     /* ---------------- Público ---------------- */
 
-    /** Descarga la lista con su nombre original. */
-    public function download(PriceList $lista)
+    /**
+     * Descarga la lista con su nombre original. La generada también se baja en
+     * Excel, con ?formato=excel.
+     */
+    public function download(Request $request, PriceList $lista)
     {
         abort_unless($lista->publicada, 404);
 
         $lista = $this->conArchivos($lista);
 
-        abort_unless(Storage::disk('public')->exists($lista->archivo), 404);
+        $excel = $request->query('formato') === 'excel' && $lista->archivo_xlsx;
+        $archivo = $excel ? $lista->archivo_xlsx : $lista->archivo;
+        $nombre = $lista->archivo_original ?: basename($lista->archivo);
+
+        abort_unless(Storage::disk('public')->exists($archivo), 404);
 
         return Storage::disk('public')->download(
-            $lista->archivo,
-            $lista->archivo_original ?: basename($lista->archivo),
+            $archivo,
+            $excel ? pathinfo($nombre, PATHINFO_FILENAME) . '.xlsx' : $nombre,
         );
     }
 
@@ -57,7 +64,8 @@ class ListasPreciosController extends Controller
     {
         $disco = Storage::disk('public');
         $completa = fn (PriceList $l) => $l->archivo && $disco->exists($l->archivo)
-            && (! $l->archivo_pdf || $disco->exists($l->archivo_pdf));
+            && (! $l->archivo_pdf || $disco->exists($l->archivo_pdf))
+            && (! $l->archivo_xlsx || $disco->exists($l->archivo_xlsx));
 
         if ($lista->origen !== PriceList::ORIGEN_ODOO || $completa($lista)) {
             return $lista;
@@ -147,9 +155,7 @@ class ListasPreciosController extends Controller
 
     public function destroy(PriceList $lista)
     {
-        if ($lista->archivo) {
-            Storage::disk('public')->delete($lista->archivo);
-        }
+        Storage::disk('public')->delete(array_filter([$lista->archivo, $lista->archivo_pdf, $lista->archivo_xlsx]));
 
         $lista->delete();
 

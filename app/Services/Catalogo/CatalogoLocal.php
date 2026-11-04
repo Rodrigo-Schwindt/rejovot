@@ -324,13 +324,18 @@ class CatalogoLocal implements CatalogoRepository
         }
     }
 
-    /** El código, escrito con o sin puntos, barras, guiones o espacios. */
+    /**
+     * Códigos que empiezan con lo escrito. Rejovot lo pidió así: «13104.0» trae
+     * 13104.0JK pero no 213104.0. Escrito con puntos, barras o guiones se
+     * respeta tal cual («723.00» no trae 7230.0380); sin ellos, se ignoran los
+     * del código («131040» trae 13104.0JK).
+     */
     private function enCodigo(Builder $q, string $texto): void
     {
-        $q->where('code', 'like', '%' . $this->escaparLike($texto) . '%');
+        $q->where('code', 'like', $this->escaparLike($texto) . '%');
 
-        if (($limpio = $this->sinSeparadores($texto)) !== '') {
-            $q->orWhereRaw($this->columnaSinSeparadores('code') . ' LIKE ?', ['%' . $limpio . '%']);
+        if (! preg_match('/[\s.\/\-_]/', $texto) && ($limpio = $this->sinSeparadores($texto)) !== '') {
+            $q->orWhereRaw($this->columnaSinSeparadores('code') . ' LIKE ?', [$limpio . '%']);
         }
     }
 

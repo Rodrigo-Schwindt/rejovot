@@ -41,8 +41,8 @@ class ReclamosPage extends Component
             'reclamos' => $cliente ? $this->consulta($cliente->id)->paginate(15) : null,
             'estados' => Claim::ESTADOS,
             'motivo' => $cliente ? null : ($clienteActivo->puedeElegir()
-                ? 'Elegí un cliente en Productos para ver sus reclamos.'
-                : 'Ingresá con tu usuario para ver tus reclamos.'),
+                ? 'Elegí un cliente para ver sus garantías.'
+                : 'Ingresá con tu usuario para ver tus garantías.'),
         ]);
     }
 

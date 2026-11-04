@@ -35,7 +35,7 @@ class Metadata extends Model
         'vehiculos' => [
             'nombre' => 'Búsqueda por marca',
             'rutas' => ['vehiculos'],
-            'privada' => false,
+            'privada' => true,
             'title' => 'Repuestos por marca',
             'description' => 'Encontrá autopartes y repuestos por marca en el catálogo mayorista: todas las marcas que trabajamos, con stock actualizado.',
             'keywords' => 'repuestos por marca, autopartes por marca, marcas de repuestos',
@@ -89,11 +89,11 @@ class Metadata extends Model
             'keywords' => '',
         ],
         'reclamos' => [
-            'nombre' => 'Reclamos',
+            'nombre' => 'Garantías',
             'rutas' => ['reclamos', 'reclamos.nuevo', 'reclamos.ver'],
             'privada' => true,
-            'title' => 'Reclamos',
-            'description' => 'Tus reclamos y su estado.',
+            'title' => 'Garantías',
+            'description' => 'Tus garantías y su estado.',
             'keywords' => '',
         ],
     ];

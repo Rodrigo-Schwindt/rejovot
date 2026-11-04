@@ -3,7 +3,6 @@
     use App\Support\Precio;
 
     $clave = ProductosPage::clave($producto['codigo']);
-    $cantidad = max(1, (int) ($cantidades[$clave] ?? 1));
     $activo = $seleccionado === $producto['codigo'];
     // Ya está en el carrito: fondo celeste y la cantidad junto al código.
     $yaEnCarrito = (int) (($enCarrito ?? [])[$producto['codigo']] ?? 0);
@@ -79,7 +78,7 @@
                 @endunless
                 <div class="flex items-baseline justify-between gap-3">
                     <dt>Precio Venta</dt>
-                    <dd class="font-semibold">{{ Precio::ar($producto['precio_venta'] * $cantidad) }}</dd>
+                    <dd class="font-semibold">{{ Precio::ar($producto['precio_venta']) }}</dd>
                 </div>
             </dl>
 

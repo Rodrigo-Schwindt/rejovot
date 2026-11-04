@@ -14,24 +14,24 @@
         <nav class="anim-entrada mb-6 text-[13px] text-slate-500" aria-label="Migas de pan">
             <a wire:navigate href="{{ route('home') }}" class="transition hover:text-[#002B56]">Inicio</a>
             <span class="mx-1.5 text-slate-400">&gt;</span>
-            <a wire:navigate href="{{ route('reclamos') }}" class="transition hover:text-[#002B56]">Reclamos</a>
+            <a wire:navigate href="{{ route('reclamos') }}" class="transition hover:text-[#002B56]">Garantías</a>
             <span class="mx-1.5 text-slate-400">&gt;</span>
             <span class="text-slate-700">{{ $reclamo->numero }}</span>
         </nav>
 
         <div class="anim-entrada mb-8 flex flex-wrap items-center justify-between gap-4" style="--retraso: 40">
-            <h1 class="text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]">Reclamo {{ $reclamo->numero }}</h1>
+            <h1 class="text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]">Garantía {{ $reclamo->numero }}</h1>
             <span class="inline-flex rounded-full px-4 py-1.5 text-[15px] font-semibold {{ $colorEstado }}">{{ $reclamo->estado_nombre }}</span>
         </div>
 
         <dl class="anim-entrada mb-8 grid grid-cols-1 gap-x-8 gap-y-4 text-[16px] sm:grid-cols-3" style="--retraso: 80">
             <div>
-                <dt class="text-slate-500">Fecha reclamo</dt>
+                <dt class="text-slate-500">Fecha</dt>
                 <dd class="mt-1 font-semibold text-slate-900">{{ $reclamo->fecha->format('d/m/Y') }}</dd>
             </div>
             <div>
                 <dt class="text-slate-500">N° factura</dt>
-                <dd class="mt-1 font-semibold text-slate-900">{{ $reclamo->factura_numero }}</dd>
+                <dd class="mt-1 font-semibold text-slate-900">{{ $reclamo->factura_numero ?: '—' }}</dd>
             </div>
             <div>
                 <dt class="text-slate-500">Fecha factura</dt>
@@ -95,7 +95,7 @@
         <div class="mt-10">
             <a wire:navigate href="{{ route('reclamos') }}"
                class="inline-flex h-[46px] items-center rounded-[4px] border border-[#002B56] px-5 text-[15px] font-bold uppercase tracking-wide text-[#002B56] transition hover:bg-slate-50">
-                Volver a reclamos
+                Volver a garantías
             </a>
         </div>
     </div>

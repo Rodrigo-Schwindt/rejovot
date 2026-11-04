@@ -46,7 +46,7 @@
 
         $navItems = [
             ['label' => 'Productos', 'route' => 'productos', 'activo' => request()->routeIs('producto') && ! $desdeVehiculos],
-            ['label' => 'Búsqueda por marca', 'route' => 'vehiculos', 'activo' => $desdeVehiculos],
+            ['label' => 'Búsqueda por marca', 'route' => 'vehiculos', 'activo' => $desdeVehiculos, 'privada' => true],
             ['label' => 'Carrito', 'route' => 'carrito', 'privada' => true],
             ['label' => 'Mis Pedidos', 'route' => 'pedidos', 'privada' => true],
             ['label' => 'Lista de precios', 'route' => 'precios', 'privada' => true],
@@ -56,101 +56,42 @@
         ];
 
         $bloqueada = fn (array $item) => ($item['privada'] ?? false) && $soloConSesion;
+
+        // Cuenta: cliente activo, su descuento y, si es vendedor, su cartera.
+        // Lo usan el header de escritorio y el menú del celular.
+        $usuarioSitio = auth('sitio')->user();
+        $clienteHeader = app(\App\Services\Sesion\ClienteActivo::class)->actual();
+        // El descuento sale de Márgenes, no del que tiene cargado en Odoo.
+        $descuentoHeader = $clienteHeader ? app(\App\Services\Margenes\Margenes::class)->descuento() : 0;
+        $carteraHeader = $usuarioSitio?->esVendedor()
+            ? \App\Models\Customer::where('active', true)->where('salesperson_id', $usuarioSitio->salesperson_id)->orderBy('name')->get(['id', 'name'])
+            : collect();
+        $nombreHeader = $clienteHeader?->name ?? $usuarioSitio?->name;
+        // Unidades en el carrito activo. Las pantallas que lo cambian avisan
+        // con el evento «carrito-cantidad» y el contador se actualiza solo.
+        $cantidadCarrito = $usuarioSitio ? app(\App\Services\Carrito\Carrito::class)->cantidadTotal() : 0;
     @endphp
 
     @include('partials.site-toast')
 
     <header x-data="{ open: false }" @keydown.escape.window="open = false"
             class="relative z-30 w-full bg-white" style="box-shadow: 0 4px 7px rgba(0,0,0,.05);">
-        <div class="mx-auto flex h-[150px] w-full max-w-[1300px] items-center justify-between gap-4 px-4 xl:px-6">
+        <div class="mx-auto flex h-[116px] w-full max-w-[1300px] items-center justify-between gap-8 px-4 xl:px-6">
 
             <a wire:navigate href="{{ route('productos') }}" class="flex shrink-0 items-center" aria-label="Rejovot Autopartes">
                 @if($contactData?->icono_1)
-                    <img src="{{ Storage::url($contactData->icono_1) }}" alt="Rejovot Autopartes" class="h-[128px] w-auto object-contain">
+                    <img src="{{ Storage::url($contactData->icono_1) }}" alt="Rejovot Autopartes" class="h-[94px] w-auto object-contain">
                 @else
-                    @include('partials.logo', ['class' => 'h-[128px] w-auto'])
+                    @include('partials.logo', ['class' => 'h-[94px] w-auto'])
                 @endif
             </a>
 
-            <nav class="hidden min-w-0 items-center gap-[18px] xl:flex">
-                @foreach($navItems as $item)
-                    @php $activo = ($item['activo'] ?? false) || ($item['route'] && request()->routeIs($item['route'])); @endphp
-
-                    @if($bloqueada($item))
-                        <button type="button" x-data @click="$dispatch('abrir-login')"
-                                title="Ingresá con tu usuario para ver {{ $item['label'] }}"
-                                class="shrink-0 cursor-pointer text-[15px] leading-none text-slate-400">
-                            {{ $item['label'] }}
-                        </button>
-                    @else
-                        <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
-                           @if($item['route']) wire:navigate @endif
-                           class="nav-link shrink-0 text-[15px] leading-none text-[#101828] {{ $activo ? 'active text-[#002B56]' : '' }}">
-                            {{ $item['label'] }}
-                        </a>
-                    @endif
-                @endforeach
-
-                @auth('sitio')
-                    {{-- El nombre se corta para no desbordar el header; completo se ve en el desplegable. --}}
-                    <div class="relative ml-1 min-w-[96px] max-w-[200px] flex-1 shrink" x-data="{ abierto: false }" @click.outside="abierto = false">
-                        <button type="button" @click="abierto = !abierto"
-                                class="flex h-[42px] w-full min-w-0 cursor-pointer items-center gap-2 rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]"
-                                title="{{ auth('sitio')->user()->name }}">
-                            <span class="min-w-0 truncate">{{ auth('sitio')->user()->name }}</span>
-                            <svg class="h-4 w-4 shrink-0 transition" :class="abierto && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
-                        </button>
-
-                        <div x-show="abierto" x-cloak x-transition.opacity.duration.100ms
-                             class="absolute right-0 z-50 mt-1 w-[260px] rounded-[4px] border border-slate-200 bg-white py-1 shadow-[0_12px_32px_rgba(13,43,94,.22)]">
-                            <p class="border-b border-slate-100 px-4 py-2.5 text-[13px] text-slate-500">
-                                <span class="block text-[14px] font-semibold leading-[130%] text-slate-800">{{ auth('sitio')->user()->name }}</span>
-                                <span class="mt-0.5 block">{{ auth('sitio')->user()->esVendedor() ? 'Vendedor' : 'Cliente' }}</span>
-                                <span class="block truncate text-slate-700">{{ auth('sitio')->user()->email }}</span>
-                            </p>
-                            <a wire:navigate href="{{ route('reclamos') }}"
-                               class="block px-4 py-2.5 text-[14px] text-slate-700 transition hover:bg-slate-50 {{ request()->routeIs('reclamos*') ? 'font-semibold text-[#002B56]' : '' }}">
-                                Reclamos
-                            </a>
-                            <form method="POST" action="{{ route('salir') }}" class="border-t border-slate-100">
-                                @csrf
-                                <button type="submit" class="w-full cursor-pointer px-4 py-2.5 text-left text-[14px] text-slate-700 transition hover:bg-slate-50">
-                                    Cerrar sesión
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                @else
-                    {{-- Ingreso de clientes / vendedores: modal desplegable debajo del botón --}}
-                    <div class="relative ml-1 shrink-0"
-                         x-data="{ abierto: {{ $errors->has('login') || $errors->has('password') || request()->boolean('ingresar') ? 'true' : 'false' }} }"
-                         @click.outside="abierto = false" @keydown.escape.window="abierto = false"
-                         {{-- setTimeout: el mismo click que abre el modal dispara el click.outside,
-                              así que se abre recién cuando ese click terminó de propagarse. --}}
-                         @abrir-login.window="setTimeout(() => { abierto = true; $nextTick(() => $refs.login?.focus()) })">
-                        <button type="button" @click="abierto = !abierto; $nextTick(() => abierto && $refs.login.focus())"
-                                class="inline-flex h-[42px] cursor-pointer items-center whitespace-nowrap rounded-[4px] bg-[#002B56] px-5 text-[15px] font-semibold text-white transition hover:bg-[#0A2249]"
-                                :aria-expanded="abierto">
-                            Ingresar
-                        </button>
-
-                        <div x-show="abierto" x-cloak
-                             x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="-translate-y-1 opacity-0"
-                             x-transition:enter-end="translate-y-0 opacity-100"
-                             x-transition:leave="transition ease-in duration-100"
-                             x-transition:leave-start="translate-y-0 opacity-100"
-                             x-transition:leave-end="-translate-y-1 opacity-0"
-                             class="absolute right-0 z-50 mt-2 w-[300px] rounded-[10px] bg-white px-6 pb-5 pt-6 shadow-[0_12px_40px_rgba(13,43,94,.25)]">
-                            @include('partials.ingreso-form', ['prefijo' => 'hdr'])
-                        </div>
-                    </div>
-                @endauth
-            </nav>
+            @include('partials.header-escritorio')
 
             <button type="button" @click="open = true"
-                    class="flex h-11 w-11 flex-col items-end justify-center gap-[6px] xl:hidden"
+                    class="relative flex h-11 w-11 flex-col items-end justify-center gap-[6px] xl:hidden"
                     aria-label="Abrir menú" :aria-expanded="open">
+                @include('partials.contador-carrito', ['clase' => 'absolute -left-1 -top-0.5'])
                 <span class="block h-[3px] w-8 rounded bg-[#002B56]"></span>
                 <span class="block h-[3px] w-6 rounded bg-[#E11A22]"></span>
                 <span class="block h-[3px] w-8 rounded bg-[#002B56]"></span>
@@ -192,9 +133,12 @@
                     @else
                         <a href="{{ $item['route'] ? route($item['route']) : '#' }}"
                            @click="open = false"
-                           class="block rounded-lg px-4 py-3 text-[15px] font-medium transition
+                           class="flex items-center justify-between rounded-lg px-4 py-3 text-[15px] font-medium transition
                                   {{ $activo ? 'bg-[#002B56] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#002B56]' }}">
                             {{ $item['label'] }}
+                            @if($item['route'] === 'carrito')
+                                @include('partials.contador-carrito')
+                            @endif
                         </a>
                     @endif
                 @endforeach
@@ -202,13 +146,37 @@
 
             <div class="border-t border-slate-100 px-5 py-6">
                 @auth('sitio')
+                    {{-- Igual que el header de escritorio: datos del cliente y, si es
+                         vendedor, el selector de cliente. --}}
                     <p class="px-4 text-[13px] text-slate-500">
-                        <span class="block text-[15px] font-semibold leading-[130%] text-slate-800">{{ auth('sitio')->user()->name }}</span>
-                        <span class="mt-0.5 block">{{ auth('sitio')->user()->esVendedor() ? 'Vendedor' : 'Cliente' }}</span>
+                        <span class="block text-[15px] font-semibold uppercase leading-[130%] text-slate-800">{{ $nombreHeader }}</span>
+                        @if($clienteHeader)
+                            <span class="mt-0.5 block">
+                                @if($clienteHeader->vat) CUIT {{ $clienteHeader->vat }} @endif
+                                @if($descuentoHeader > 0) · {{ rtrim(rtrim(number_format($descuentoHeader, 2, ',', '.'), '0'), ',') }}% de descuento @endif
+                                @if($clienteHeader->salesperson) · {{ $clienteHeader->salesperson->name }} @endif
+                            </span>
+                        @else
+                            <span class="mt-0.5 block">{{ $usuarioSitio->esVendedor() ? 'Vendedor' : 'Cliente' }}</span>
+                        @endif
                     </p>
+
+                    @if($usuarioSitio->esVendedor())
+                        <form method="POST" action="{{ route('cliente.elegir') }}" class="mt-3 px-4">
+                            @csrf
+                            <label for="mob-cliente" class="sr-only">Cliente</label>
+                            <select id="mob-cliente" name="cliente" onchange="this.form.submit()"
+                                    class="h-[42px] w-full cursor-pointer rounded-[4px] border border-slate-300 bg-white px-2 text-[14px] text-slate-800 outline-none focus:border-[#002B56]">
+                                <option value="" @selected(! $clienteHeader)>{{ $carteraHeader->isEmpty() ? 'No tenés clientes asignados' : 'Elegí un cliente' }}</option>
+                                @foreach($carteraHeader as $c)
+                                    <option value="{{ $c->id }}" @selected($clienteHeader?->id === $c->id)>{{ $c->name }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @endif
                     <a wire:navigate href="{{ route('reclamos') }}" @click="open = false"
                        class="mt-3 block rounded-lg px-4 py-3 text-[15px] font-medium transition {{ request()->routeIs('reclamos*') ? 'bg-[#002B56] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50 hover:text-[#002B56]' }}">
-                        Reclamos
+                        Garantías
                     </a>
                     <form method="POST" action="{{ route('salir') }}">
                         @csrf

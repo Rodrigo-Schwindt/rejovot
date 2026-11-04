@@ -277,17 +277,21 @@ class Carrito
         ];
     }
 
-    /** @return array<string, int> código => cantidad, en el orden en que se agregaron */
+    /**
+     * @return array<string, int> código => cantidad, lo último agregado primero
+     * (así lo pidió Rejovot: arriba de todo en el carrito). Cambiar la cantidad
+     * de un producto no lo mueve de lugar.
+     */
     private function lineas(): array
     {
         if (! $cliente = $this->clienteId()) {
-            return Session::get($this->claveSesion(), []);
+            return array_reverse(Session::get($this->claveSesion(), []), true);
         }
 
         $this->pasarCarritoDeSesion($cliente);
 
         return $this->enBase($cliente)
-            ->orderBy('id')
+            ->orderByDesc('id')
             ->pluck('cantidad', 'codigo')
             ->map(fn ($cantidad) => (int) $cantidad)
             ->all();

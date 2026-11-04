@@ -10,29 +10,29 @@
         <nav class="anim-entrada mb-6 text-[13px] text-slate-500" aria-label="Migas de pan">
             <a wire:navigate href="{{ route('home') }}" class="transition hover:text-[#002B56]">Inicio</a>
             <span class="mx-1.5 text-slate-400">&gt;</span>
-            <span class="text-slate-700">Reclamos</span>
+            <span class="text-slate-700">Garantías</span>
         </nav>
 
         <div class="anim-entrada mb-8 flex flex-wrap items-center justify-between gap-4" style="--retraso: 40">
-            <h1 class="text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]">Reclamos</h1>
+            <h1 class="text-[34px] font-bold leading-[120%] text-slate-900 max-sm:text-[26px]">Garantías</h1>
 
             @if($cliente)
                 <a wire:navigate href="{{ route('reclamos.nuevo') }}"
                    class="inline-flex h-[46px] items-center rounded-[4px] bg-[#002B56] px-6 text-[15px] font-bold uppercase tracking-wide text-white transition hover:bg-[#0A2249]">
-                    Nuevo reclamo
+                    Nueva garantía
                 </a>
             @endif
         </div>
 
         @if($cliente)
             <p class="anim-entrada -mt-4 mb-6 text-[14px] text-slate-500" style="--retraso: 60">
-                Reclamos de <span class="font-semibold text-slate-700">{{ $cliente->name }}</span>
+                Garantías de <span class="font-semibold text-slate-700">{{ $cliente->name }}</span>
             </p>
 
             {{-- Filtros --}}
             <div class="anim-entrada mb-8 grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-3" style="--retraso: 90">
                 <div>
-                    <label for="f-numero" class="mb-2 block text-[19px] font-semibold text-slate-900">N° reclamo</label>
+                    <label for="f-numero" class="mb-2 block text-[19px] font-semibold text-slate-900">N° garantía</label>
                     <input id="f-numero" type="text" wire:model.live.debounce.400ms="numero" placeholder="Ingrese número" class="{{ $campo }}">
                 </div>
                 <div>
@@ -56,7 +56,7 @@
             <table class="w-full min-w-[640px] border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 bg-[#F8F8F8] text-[16px] font-semibold text-slate-800">
-                        <th class="px-6 py-5 text-left">N° reclamo</th>
+                        <th class="px-6 py-5 text-left">N° garantía</th>
                         <th class="px-6 py-5 text-left">Fecha envío</th>
                         <th class="px-6 py-5 text-left">Estado</th>
                         <th class="px-6 py-5 text-right"><span class="sr-only">Acciones</span></th>
@@ -71,7 +71,7 @@
                             <td class="px-6 py-6 text-right">
                                 <a wire:navigate href="{{ route('reclamos.ver', $reclamo) }}"
                                    class="inline-flex h-[46px] items-center rounded-[4px] border border-[#002B56] px-4 text-[15px] font-bold uppercase tracking-wide text-[#002B56] transition hover:bg-[#002B56] hover:text-white">
-                                    Ver reclamo
+                                    Ver garantía
                                 </a>
                             </td>
                         </tr>
@@ -81,9 +81,9 @@
                                 @if($motivo)
                                     {{ $motivo }}
                                 @elseif($numero !== '' || $articulo !== '' || $estado !== '')
-                                    Ningún reclamo coincide con esos filtros.
+                                    Ninguna garantía coincide con esos filtros.
                                 @else
-                                    Todavía no hiciste reclamos.
+                                    Todavía no cargaste garantías.
                                 @endif
                             </td>
                         </tr>

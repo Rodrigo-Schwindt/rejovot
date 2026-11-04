@@ -32,6 +32,8 @@
     </div>
 </form>
 
+{{-- Oculto a pedido del cliente: «Problemas para ingresar» y «Registrate».
+     Para volver a mostrarlo, sacar este comentario.
 <div class="mt-5 border-t border-slate-200 pt-4 text-center">
     <a href="mailto:{{ $contactData?->mail_adm ?: 'ventas@rejovot.com.ar' }}?subject=Problemas%20para%20ingresar"
        class="text-[14px] text-slate-800 underline underline-offset-4 transition hover:text-[#002B56]">
@@ -43,3 +45,4 @@
            class="underline underline-offset-2 transition hover:text-[#002B56]">Registrate</a>
     </p>
 </div>
+--}}

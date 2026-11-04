@@ -12,14 +12,28 @@ class OdooFacturas
     {
     }
 
-    /** Últimas facturas del cliente, de la más nueva a la más vieja. */
+    /**
+     * Empresas que le facturan al cliente: Rejovot y la de «INFO» (PRUEBA en
+     * Odoo), las mismas dos tablas del Estado de la cuenta.
+     *
+     * @return array<int, int>
+     */
+    private function empresas(): array
+    {
+        return array_values(array_unique(array_filter([
+            (int) config('odoo.company_id'),
+            (int) config('odoo.company_info_id'),
+        ])));
+    }
+
+    /** Últimas facturas del cliente (de las dos empresas), de la más nueva a la más vieja. */
     public function delCliente(int $partnerId, int $limite = 60): array
     {
         return $this->odoo->searchRead('account.move', [
             ['partner_id', '=', $partnerId],
             ['move_type', '=', 'out_invoice'],
             ['state', '=', 'posted'],
-            ['company_id', '=', config('odoo.company_id')],
+            ['company_id', 'in', $this->empresas()],
         ], ['name', 'invoice_date', 'amount_total'], [
             'limit' => $limite,
             'order' => 'invoice_date desc, id desc',
@@ -33,9 +47,12 @@ class OdooFacturas
      */
     public function lineas(int $moveId, int $partnerId): array
     {
-        $move = $this->odoo->read('account.move', [$moveId], ['partner_id', 'invoice_line_ids'])[0] ?? null;
+        $move = $this->odoo->read('account.move', [$moveId], ['partner_id', 'company_id', 'invoice_line_ids'])[0] ?? null;
 
-        if (! $move || ($move['partner_id'][0] ?? null) !== $partnerId || ! $move['invoice_line_ids']) {
+        if (! $move
+            || ($move['partner_id'][0] ?? null) !== $partnerId
+            || ! in_array($move['company_id'][0] ?? null, $this->empresas(), true)
+            || ! $move['invoice_line_ids']) {
             return [];
         }
 

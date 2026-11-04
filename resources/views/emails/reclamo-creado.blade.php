@@ -1,12 +1,12 @@
-<h2 style="font-family: Arial, sans-serif; color: #002B56;">Reclamo {{ $reclamo->numero }}</h2>
+<h2 style="font-family: Arial, sans-serif; color: #002B56;">Garantía {{ $reclamo->numero }}</h2>
 
 <p style="font-family: Arial, sans-serif; color: #334155; font-size: 15px;">
-    <strong>{{ $reclamo->customer->name }}</strong> cargó un reclamo desde el sitio.
+    <strong>{{ $reclamo->customer->name }}</strong> cargó una garantía desde el sitio.
 </p>
 
 <table cellpadding="6" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 14px; color: #334155;">
     <tr><td style="color:#64748b;">Fecha</td><td>{{ $reclamo->fecha->format('d/m/Y') }}</td></tr>
-    <tr><td style="color:#64748b;">Factura</td><td>{{ $reclamo->factura_numero }}{{ $reclamo->factura_fecha ? ' · ' . $reclamo->factura_fecha->format('d/m/Y') : '' }}</td></tr>
+    <tr><td style="color:#64748b;">Factura</td><td>{{ $reclamo->factura_numero ?: 'Sin factura' }}{{ $reclamo->factura_fecha ? ' · ' . $reclamo->factura_fecha->format('d/m/Y') : '' }}</td></tr>
     @if($reclamo->user?->esVendedor())
         <tr><td style="color:#64748b;">Lo cargó</td><td>{{ $reclamo->user->name }}</td></tr>
     @endif
@@ -33,5 +33,5 @@
 @endif
 
 <p style="font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">
-    El estado del reclamo se sigue desde el sitio, en «Reclamos».
+    El estado de la garantía se sigue desde el sitio, en «Garantías».
 </p>

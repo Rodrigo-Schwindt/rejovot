@@ -1,7 +1,7 @@
-<h2 style="font-family: Arial, sans-serif; color: #002B56;">Reclamo {{ $reclamo->numero }}</h2>
+<h2 style="font-family: Arial, sans-serif; color: #002B56;">Garantía {{ $reclamo->numero }}</h2>
 
 <p style="font-family: Arial, sans-serif; color: #334155; font-size: 15px;">
-    Tu reclamo sobre la factura <strong>{{ $reclamo->factura_numero }}</strong> pasó a
+    Tu garantía{!! $reclamo->factura_numero ? ' sobre la factura <strong>' . e($reclamo->factura_numero) . '</strong>' : ' ' . e($reclamo->numero) !!} pasó a
     <strong>{{ $reclamo->estado_nombre }}</strong>.
 </p>
 
@@ -13,5 +13,5 @@
 @endif
 
 <p style="font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">
-    Podés ver el detalle en el sitio, en «Reclamos».
+    Podés ver el detalle en el sitio, en «Garantías».
 </p>

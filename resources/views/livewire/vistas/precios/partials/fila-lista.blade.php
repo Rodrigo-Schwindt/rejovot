@@ -45,11 +45,15 @@
                 </button>
             @endif
 
-            {{-- El botón dice qué formato se baja: la lista generada es CSV. --}}
-            <a href="{{ route('precios.descargar', $lista) }}"
-               class="inline-flex h-[44px] items-center rounded-[4px] border border-[#002B56] px-6 text-[14px] font-bold uppercase tracking-wide text-[#002B56] transition hover:bg-[#002B56] hover:text-white">
-                Descargar {{ $lista->formato === 'excel' ? 'Excel' : strtoupper($lista->formato) }}
-            </a>
+            {{-- La lista generada se baja en CSV o Excel; las subidas, en su único formato. --}}
+            @if($lista->archivo_xlsx)
+                @include('livewire.vistas.precios.partials.descargar-formatos')
+            @else
+                <a href="{{ route('precios.descargar', $lista) }}"
+                   class="inline-flex h-[44px] items-center rounded-[4px] border border-[#002B56] px-6 text-[14px] font-bold uppercase tracking-wide text-[#002B56] transition hover:bg-[#002B56] hover:text-white">
+                    Descargar {{ $lista->formato === 'excel' ? 'Excel' : strtoupper($lista->formato) }}
+                </a>
+            @endif
         </div>
     </td>
 </tr>

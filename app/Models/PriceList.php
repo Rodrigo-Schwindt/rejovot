@@ -24,9 +24,11 @@ class PriceList extends Model
         'origen',
         'archivo',
         'archivo_pdf',
+        'archivo_xlsx',
         'archivo_original',
         'tamano',
         'tamano_pdf',
+        'tamano_xlsx',
         'vigencia',
         'notas',
         'publicada',
@@ -40,6 +42,7 @@ class PriceList extends Model
             'publicada' => 'boolean',
             'tamano' => 'integer',
             'tamano_pdf' => 'integer',
+            'tamano_xlsx' => 'integer',
             'generada_at' => 'datetime',
         ];
     }
@@ -62,11 +65,13 @@ class PriceList extends Model
 
     /**
      * Formato tal cual se muestra en la tabla: PDF, EXCEL, CSV. La lista
-     * generada se baja en CSV pero también se puede ver en PDF.
+     * generada se baja en CSV o Excel y también se puede ver en PDF.
      */
     public function getFormatoNombreAttribute(): string
     {
-        return strtoupper($this->formato) . ($this->archivo_pdf ? ' · PDF' : '');
+        return strtoupper($this->formato)
+            . ($this->archivo_xlsx ? ' · EXCEL' : '')
+            . ($this->archivo_pdf ? ' · PDF' : '');
     }
 
     public function getEsPdfAttribute(): bool
@@ -89,8 +94,16 @@ class PriceList extends Model
     /** Peso legible: 1,2 MB / 340 KB. */
     public function getTamanoLegibleAttribute(): string
     {
-        $bytes = (int) $this->tamano;
+        return self::legible((int) $this->tamano);
+    }
 
+    public function getTamanoXlsxLegibleAttribute(): string
+    {
+        return self::legible((int) $this->tamano_xlsx);
+    }
+
+    private static function legible(int $bytes): string
+    {
         if ($bytes <= 0) {
             return '—';
         }
